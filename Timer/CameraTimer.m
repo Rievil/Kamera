@@ -50,12 +50,12 @@ classdef CameraTimer < handle
         end
         
         function obj=TimerExec(obj)
-            disp('Two seconds passed'); 
+            disp('-----Image succesfully stored----:-)'); 
             Shoot(obj.Parent);
         end
         
         function obj=EndTimer(obj)
-            disp('End of all periods');
+            disp('End of shooting');
             Repeat(obj);
             StartTimer(obj);
             SaveLog(obj.Parent);
@@ -66,7 +66,7 @@ classdef CameraTimer < handle
         end
         
         function obj=MyStart(obj)
-            disp('Start of timer');
+            disp('Waiting for another photo ...');
         end  
     end
     

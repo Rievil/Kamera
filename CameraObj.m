@@ -62,7 +62,7 @@ classdef CameraObj < handle
             %executeCommand(g, 'ColorTransformationResetToFactoryList')
             g.ColorTransformationAuto='continuous';
             g.AcquisitionFrameRateEnable = 'True';
-            g.AcquisitionFrameRate = 1;
+            g.AcquisitionFrameRate = 3;
             g.ExposureTime = 2.5e+4;
             g.PixelFormat='BGR8';
             g.TriggerMode='off';
@@ -98,10 +98,9 @@ classdef CameraObj < handle
             %16 seconds
             tic;
             
-            clear obj.Driver;
             delete(obj.Driver);
             obj.Driver=[];
-            
+            clear obj.Driver;
             
             Conn(obj);
             pause(5);
