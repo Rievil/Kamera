@@ -3,8 +3,10 @@ classdef CameraObj < handle
         Timer;
         Namer;
         PhotoTMP cell;
-        CurrPhoto;
+        CurrPhoto=0;
         PhotoFolder='';
+        Image;
+        Filename;
         NPhoto=0;
         Driver;
         Period;    
@@ -18,10 +20,17 @@ classdef CameraObj < handle
             AddLogLine(obj,[],[]);
         end
         
-        function SetPhotoFolder(obj)
-            obj.PhotoFolder = uigetdir('C:\','Select folder for storing images');
+        function SetPhotoFolder(obj,path)
+            if path
+                obj.PhotoFolder=path;
+            else
+                obj.PhotoFolder = uigetdir('C:\','Select folder for storing images');
+            end
         end
 
+        function StartTimerShoot(obj)
+            TestStart(obj.Timer);
+        end
         
         function AddLogLine(obj,name,duration)
             nowArr=CameraObj.GetNow;
@@ -64,26 +73,31 @@ classdef CameraObj < handle
         end
         
         function TestShoot(obj)            
-            snapshot(g);
+            img=snapshot(obj.Driver);
+            imshow(img);
         end
         
         function Shoot(obj)
             tic;
-            TestShoot(obj);
-            
-            img = snapshot(g);
+
+            obj.Image = snapshot(obj.Driver);
+            obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.jpg',obj.NPhoto,CameraObj.GetNow()))];
             
             AddLogLine(obj,"ShootTime",toc);
-            AddPhoto(obj,img);
+%             AddPhoto(obj,obj.Image);
             StorePhoto(obj);
+            ResetDriver(obj);
         end
         
         function ResetDriver(obj)
             tic;
             
-            close(obj.Driver);
+            clear obj.Driver;
             delete(obj.Driver);
+            obj.Driver=[];
+            
             Conn(obj);
+            pause(5);
             
             AddLogLine(obj,"ResetTime",toc);
         end
@@ -91,22 +105,23 @@ classdef CameraObj < handle
         function StorePhoto(obj)
             tic;
             if ~strcmp(obj.PhotoFolder,'')
-                nowArr=char(CameraObj.GetNow);
                 obj.NPhoto=obj.NPhoto+1;
-                filename=[objPhotoFolder, char(sprintf('%d_Image_%s.npg',obj.NPhoto,nowArr))];
-                imwrite(obj.PhotoTmp{end},filename);            
+                imwrite(obj.Image,obj.Filename);            
             end
             AddLogLine(obj,"StoreTime",toc);
         end
         
         function AddPhoto(obj,img)
             tic;
+            
             obj.CurrPhoto=obj.CurrPhoto+1;
+            
+            
             if obj.CurrPhoto<11
-                obj.PhotoTmp{obj.CurrPhoto}=img;
+                obj.PhotoTMP{obj.CurrPhoto}={img};
             else
-                obj.PhotoTmp{obj.CurrPhoto}=img;
-                obj.PhotoTmp{1}=[];
+                obj.PhotoTMP{obj.CurrPhoto}={img};
+                obj.PhotoTMP{1}=[];
                 obj.CurrPhoto=obj.CurrPhoto-1;
             end
             AddLogLine(obj,"MemSaveTime",toc);
@@ -116,7 +131,7 @@ classdef CameraObj < handle
     
     methods (Static)
         function nowArr=GetNow(~)
-            nowArr=datetime(now,'ConvertFrom','datenum','Format','dd.MM.yyyy hh:mm:ss.ss');
+            nowArr=datetime(now,'ConvertFrom','datenum','Format','dd-MM-yyyy hh-mm-ss');
         end
     end
 end

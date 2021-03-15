@@ -19,7 +19,7 @@ classdef CameraTimer < handle
             
             t=timer;
             
-            t.TasksToExecute=5;
+            t.TasksToExecute=1;
             t.Period = 3;
             t.StartDelay=3;
             obj.Delay=5;
@@ -38,15 +38,20 @@ classdef CameraTimer < handle
 %             StartTimer(obj);
         end
         
+        function TestStart(obj)
+            Shoot(obj.Parent);
+            StartTimer(obj);
+        end
 
         function StartTimer(obj)
             obj.Start=datetime(now,'ConvertFrom','datenum','Format','yyyy-MM-dd HH:mm:ss');            
-            obj.NextTime=obj.Start+seconds(5);            
+            obj.NextTime=obj.Start+minutes(2);            
             startat(obj.Timer,year(obj.NextTime),month(obj.NextTime),day(obj.NextTime),hour(obj.NextTime),minute(obj.NextTime),second(obj.NextTime));
         end
         
         function obj=TimerExec(obj)
-            disp('Two seconds passed');            
+            disp('Two seconds passed'); 
+            Shoot(obj.Parent);
         end
         
         function obj=EndTimer(obj)
