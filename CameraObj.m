@@ -88,6 +88,7 @@ classdef CameraObj < handle
     %             AddPhoto(obj,obj.Image);
                 StorePhoto(obj);
             catch
+                warning('Image wasnt stored');
                 AddLogLine(obj,"ShootTimeError",toc);
             end
             ResetDriver(obj);
