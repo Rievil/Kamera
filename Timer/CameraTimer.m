@@ -1,4 +1,4 @@
-classdef MyTimer < handle
+classdef CameraTimer < handle
     %UNTITLED3 Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -12,7 +12,7 @@ classdef MyTimer < handle
     end
     
     methods
-        function obj = MyTimer(parent)
+        function obj = CameraTimer(parent)
             obj.Parent=parent;
             
             ClearTimer(obj);
@@ -35,7 +35,7 @@ classdef MyTimer < handle
             
             obj.Timer=t;
             
-            StartTimer(obj);
+%             StartTimer(obj);
         end
         
 
