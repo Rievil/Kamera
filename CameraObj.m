@@ -9,7 +9,7 @@ classdef CameraObj < handle
         Filename;
         NPhoto=0;
         Driver;
-        Period;    
+        Period=10;    
         StatLog table;
         IP;
     end
@@ -62,10 +62,13 @@ classdef CameraObj < handle
             %executeCommand(g, 'ColorTransformationResetToFactoryList')
             g.ColorTransformationAuto='continuous';
             g.AcquisitionFrameRateEnable = 'True';
-            g.AcquisitionFrameRate = 3;
+            g.AcquisitionFrameRate = 2;
             g.ExposureTime = 2.5e+4;
-            g.PixelFormat='BGR8';
+            g.PixelFormat='RGB8';
             g.TriggerMode='off';
+            g.TimerDelay = 3;
+            g.TimerDuration = 11;
+%             g.DeviceLinkThroughputLimit=125000000;
             obj.Driver=g;
             
             AddLogLine(obj,"ConnTime",toc);
@@ -76,14 +79,17 @@ classdef CameraObj < handle
             imshow(img);
         end
         
+        function SetTimer(obj,varargin)
+            Set(obj.Timer,varargin);
+        end
+        
         function Shoot(obj)
             tic;
             try
                 
-
-                obj.Image = snapshot(obj.Driver);
-                obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.jpg',obj.NPhoto,CameraObj.GetNow()))];
-
+                obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.png',obj.NPhoto,CameraObj.GetNow()))];
+                obj.Image = snapshot(obj.Driver);              
+                disp('-----Image succesfully stored----:-)');
                 AddLogLine(obj,"ShootTime",toc);
     %             AddPhoto(obj,obj.Image);
                 StorePhoto(obj);
@@ -102,10 +108,14 @@ classdef CameraObj < handle
             obj.Driver=[];
             clear obj.Driver;
             
-            Conn(obj);
-            pause(5);
-            
             AddLogLine(obj,"ResetTime",toc);
+            
+            Conn(obj);
+        end
+        
+        function ResetTimer(obj)
+            Stop(obj.Timer);
+            ClearTimer(obj.Timer);            
         end
         
         function StorePhoto(obj)
