@@ -45,7 +45,7 @@ classdef CameraTimer < handle
 
         function StartTimer(obj)
             obj.Start=datetime(now,'ConvertFrom','datenum','Format','yyyy-MM-dd HH:mm:ss');            
-            obj.NextTime=obj.Start+minutes(2);            
+            obj.NextTime=obj.Start+minutes(1);            
             startat(obj.Timer,year(obj.NextTime),month(obj.NextTime),day(obj.NextTime),hour(obj.NextTime),minute(obj.NextTime),second(obj.NextTime));
         end
         
@@ -58,6 +58,7 @@ classdef CameraTimer < handle
             disp('End of all periods');
             Repeat(obj);
             StartTimer(obj);
+            SaveLog(obj.Parent);
         end
         
         function Repeat(obj)

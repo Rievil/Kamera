@@ -56,7 +56,6 @@ classdef CameraObj < handle
         end
         
         function Conn(obj)
-            AddLogLine(obj,"ConnTime_start",0)
             tic;
             
             g = gigecam(obj.IP);
@@ -69,7 +68,7 @@ classdef CameraObj < handle
             g.TriggerMode='off';
             obj.Driver=g;
             
-            AddLogLine(obj,"ConnTime_end",toc);
+            AddLogLine(obj,"ConnTime",toc);
         end
         
         function TestShoot(obj)            
@@ -79,22 +78,29 @@ classdef CameraObj < handle
         
         function Shoot(obj)
             tic;
+            try
+                
 
-            obj.Image = snapshot(obj.Driver);
-            obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.jpg',obj.NPhoto,CameraObj.GetNow()))];
-            
-            AddLogLine(obj,"ShootTime",toc);
-%             AddPhoto(obj,obj.Image);
-            StorePhoto(obj);
+                obj.Image = snapshot(obj.Driver);
+                obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.jpg',obj.NPhoto,CameraObj.GetNow()))];
+
+                AddLogLine(obj,"ShootTime",toc);
+    %             AddPhoto(obj,obj.Image);
+                StorePhoto(obj);
+            catch
+                AddLogLine(obj,"ShootTimeError",toc);
+            end
             ResetDriver(obj);
         end
         
         function ResetDriver(obj)
+            %16 seconds
             tic;
             
             clear obj.Driver;
             delete(obj.Driver);
             obj.Driver=[];
+            
             
             Conn(obj);
             pause(5);
@@ -125,7 +131,11 @@ classdef CameraObj < handle
                 obj.CurrPhoto=obj.CurrPhoto-1;
             end
             AddLogLine(obj,"MemSaveTime",toc);
-        end                
+        end   
+        
+        function SaveLog(obj)
+            writetable(obj.StatLog,'Statlog.xlsx');
+        end
     end
     
     
