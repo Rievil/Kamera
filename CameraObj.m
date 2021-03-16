@@ -12,12 +12,14 @@ classdef CameraObj < handle
         Period=10;    
         StatLog table;
         IP;
+        Arduino;
     end
     
     methods
         function obj=CameraObj(~)
             obj.Timer=CameraTimer(obj);
             AddLogLine(obj,[],[]);
+            obj.Arduino=ArduinoObj(obj);
         end
         
         function SetPhotoFolder(obj,path)
@@ -60,10 +62,11 @@ classdef CameraObj < handle
             
             g = gigecam(obj.IP);
             %executeCommand(g, 'ColorTransformationResetToFactoryList')
-            g.ColorTransformationAuto='continuous';
+            g.ColorTransformationAuto='off';
+%             g.BalanceWhite='off';
             g.AcquisitionFrameRateEnable = 'True';
             g.AcquisitionFrameRate = 2;
-            g.ExposureTime = 2.5e+4;
+            g.ExposureTime = 5e+4;
             g.PixelFormat='RGB8';
             g.TriggerMode='off';
             g.TimerDelay = 3;
@@ -88,15 +91,25 @@ classdef CameraObj < handle
             try
                 
                 obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.png',obj.NPhoto,CameraObj.GetNow()))];
+%                 obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.png',obj.NPhoto,obj.Timer.NextTime))];
+                OpenConnection(obj.Arduino);
+                pause(2);
+                LightUp(obj.Arduino);
+                
                 obj.Image = snapshot(obj.Driver);              
                 disp('-----Image succesfully stored----:-)');
+                GoDark(obj.Arduino);
+                pause(1);
                 AddLogLine(obj,"ShootTime",toc);
     %             AddPhoto(obj,obj.Image);
                 StorePhoto(obj);
-            catch
+            catch ME
                 warning('Image wasnt stored');
+                GoDark(obj.Arduino);
                 AddLogLine(obj,"ShootTimeError",toc);
+                
             end
+            CloseConnection(obj.Arduino);
             ResetDriver(obj);
         end
         

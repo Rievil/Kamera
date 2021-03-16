@@ -43,12 +43,12 @@ if ~isempty(instrfind)
      fclose(instrfind);
       delete(instrfind);
 end
-
+%%
 ports=serialportlist("available");
 
 
 %%
-s = serialport('COM5',115200,'Timeout',2);
+s = serialport('COM4',115200,'Timeout',2);
 configureTerminator(s,'CR/LF');
 %%
 write(s,8,"int8");
@@ -66,4 +66,21 @@ writeline(s,'1');
 % pause(0.5);
 write(s,1,"int8");
 result=readline(s);
-pause(.5);
+pause(5);
+delete(s);
+%%
+tic;
+obj=ArduinoObj(25);
+
+OpenConnection(obj);
+
+pause(2);
+%%
+LightUp(obj)
+
+%%
+%
+
+GoDark(obj);
+%%
+CloseConnection(obj);
