@@ -63,6 +63,7 @@ classdef CameraObj < handle
             g = gigecam(obj.IP);
             %executeCommand(g, 'ColorTransformationResetToFactoryList')
             g.ColorTransformationAuto='off';
+            g.BalanceWhiteAuto='off';
 %             g.BalanceWhite='off';
             g.AcquisitionFrameRateEnable = 'True';
             g.AcquisitionFrameRate = 2;
@@ -70,7 +71,7 @@ classdef CameraObj < handle
             g.PixelFormat='RGB8';
             g.TriggerMode='off';
             g.TimerDelay = 0;
-            g.TimerDuration = 100; %this is is usec, and must be 100'!!
+            g.TimerDuration = 2000; %this is is usec, and must be 100'!!
 %             g.DeviceLinkThroughputLimit=125000000;
             obj.Driver=g;
             
