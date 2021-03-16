@@ -21,8 +21,8 @@ classdef CameraTimer < handle
             t=timer;
             
             t.TasksToExecute=1;
-            t.Period = 30;
-            t.StartDelay=0;
+            t.Period = 3;
+            t.StartDelay=3;
             obj.Delay=5;
             
             
@@ -39,20 +39,18 @@ classdef CameraTimer < handle
 %             StartTimer(obj);
         end
         
-        function Set(obj,param)
-            val=param;
-            while numel(val)>0
-                switch lower(val{1,1})
+        function Set(obj,pa)
+            while numel(varargin)>0
+                switch lower(varargin{1,1})
                     case 'period'
-                        obj.Period=val{2};
+                        obj.Period=varargin{2};
                     otherwise
                 end
-                val(1:2)=[];
+                varargin{[1,2]}=[];
             end
         end
         
         function TestStart(obj)
-            obj.RCount=0;
             Count(obj);
             Shoot(obj.Parent);
             StartTimer(obj);
@@ -61,15 +59,16 @@ classdef CameraTimer < handle
         function StartTimer(obj)
             if obj.RCount==1
                 obj.Start=datetime(now,'ConvertFrom','datenum','Format','yyyy-MM-dd HH:mm:ss');            
-                obj.NextTime=obj.Start+minutes(obj.Period);    
+                obj.NextTime=obj.Start+minutes(1);    
             else
-                obj.NextTime=obj.NextTime+minutes(obj.Period);
+                obj.NextTime=obj.NextTime+minutes(1);
             end
         
             startat(obj.Timer,year(obj.NextTime),month(obj.NextTime),day(obj.NextTime),hour(obj.NextTime),minute(obj.NextTime),second(obj.NextTime));
         end
         
         function obj=TimerExec(obj)
+           
             Shoot(obj.Parent);
         end
         
@@ -85,9 +84,7 @@ classdef CameraTimer < handle
         end
         
         function obj=MyStart(obj)
-            msg=sprintf('Waiting for another photo at time: %s',char(obj.NextTime));
-            disp(msg);
-            disp('.....................................................................');
+            disp('Waiting for another photo ...');
         end  
     end
     
