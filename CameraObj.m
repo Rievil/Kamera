@@ -69,8 +69,8 @@ classdef CameraObj < handle
             g.ExposureTime = 5e+4;
             g.PixelFormat='RGB8';
             g.TriggerMode='off';
-            g.TimerDelay = 3;
-            g.TimerDuration = 11;
+            g.TimerDelay = 0;
+            g.TimerDuration = 100; %this is is usec, and must be 100'!!
 %             g.DeviceLinkThroughputLimit=125000000;
             obj.Driver=g;
             
