@@ -144,7 +144,7 @@ classdef CameraObj < handle
         end   
         
         function SaveLog(obj)
-            writetable(obj.StatLog,'Statlog.xlsx');
+            writetable(obj.StatLog,[obj.PhotoFolder '\Statlog.xlsx']);
         end
     end
     
