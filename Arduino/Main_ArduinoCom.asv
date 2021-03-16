@@ -48,7 +48,7 @@ ports=serialportlist("available");
 
 
 %%
-s = serialport('COM5',115200,'Timeout',2);
+s = serialport('COM4',115200,'Timeout',2);
 configureTerminator(s,'CR/LF');
 %%
 write(s,8,"int8");
@@ -64,6 +64,6 @@ writeline(s,'1');
 % writeline(s,'1');
 % write(s,7,"double");
 % pause(0.5);
-write(s,1,"int8");
+write(s,2,"int8");
 result=readline(s);
 pause(.5);
