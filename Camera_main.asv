@@ -49,11 +49,6 @@ preview(g);
 %%
 delete(g);
 %%
-vidobj = videoinput('gige', 1, 'BGR8');
-%%
-src = getselectedsource(vidobj);
-%%
-snapshot = getsnapshot(vidobj);
-imshow(snapshot);
+out1 = imaqfind('Type', 'videoinput')
 %%
 vidobj = videoinput('winvideo');

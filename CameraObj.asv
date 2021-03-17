@@ -59,7 +59,12 @@ classdef CameraObj < handle
         end
         
         function ChangeSettings(obj)
+            en
+        function Conn(obj)
             tic;
+            
+            obj.Driver = gigecam(obj.IP);
+            %executeCommand(g, 'ColorTransformationResetToFactoryList')
             obj.Driver.ColorTransformationAuto='off';
             obj.Driver.BalanceWhiteAuto='off';
 %             g.BalanceWhite='off';
@@ -78,16 +83,6 @@ classdef CameraObj < handle
 %             executeCommand(obj.Driver, 'CounterReset');
 %             executeCommand(obj.Driver, 'TimestampReset');
             executeCommand(obj.Driver, 'TimestampLatch');
-            disp('Settings changed');
-            AddLogLine(obj,"SettingsChange",toc);
-        end
-        
-        function Conn(obj)
-            tic;
-            
-            obj.Driver = gigecam(obj.IP);
-            
-            ChangeSettings(obj);
             
             AddLogLine(obj,"ConnTime",toc);
             disp('Device ready');

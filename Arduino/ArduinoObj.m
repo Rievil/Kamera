@@ -41,6 +41,7 @@ classdef ArduinoObj < handle
         function OpenConnection(obj)
             CloseAllConn(obj);
             SetupConn(obj);
+            pause(2);
         end
         
         function CloseConnection(obj)

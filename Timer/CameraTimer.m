@@ -54,6 +54,7 @@ classdef CameraTimer < handle
         function TestStart(obj)
             obj.RCount=0;
             Count(obj);
+            
             Shoot(obj.Parent);
             StartTimer(obj);
         end
