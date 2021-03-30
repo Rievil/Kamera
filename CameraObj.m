@@ -76,16 +76,16 @@ classdef CameraObj < handle
             tic;
             
 %             obj.VSrc.ColorTransformationFactoryListSelector='OptimizedMatrixFor3000K';
-%             obj.VSrc.ColorTransformationValue=1;
-% 
-%             obj.VSrc.ColorTransformationAuto='off';
-%             obj.VSrc.BalanceWhiteAuto='off';
-%             %             g.BalanceWhite='off';
-%             obj.VSrc.AcquisitionFrameRateEnable = 'True';
-%             obj.VSrc.AcquisitionFrameRate = 2;
-%             obj.VSrc.ExposureTime = 5e+4;
-%             obj.VSrc.ColorTransformationValue=1.0;
+            obj.VSrc.ColorTransformationAuto='Off';
+            obj.VSrc.ColorTransformationValue=1;
             
+            
+            obj.VSrc.AcquisitionFrameRateEnable = 'True';
+            obj.VSrc.AcquisitionFrameRate = 2;
+            obj.VSrc.ExposureTime = 7500;
+            
+            
+            obj.VSrc.Gain=1;
             disp('Settings changed');
             AddLogLine(obj,"SettingsChange",toc);
         end
@@ -149,6 +149,8 @@ classdef CameraObj < handle
             tic;
             disp('Reseting driver...');
             delete(obj.Driver);
+%             delete(obj.VSrc);
+            obj.VSrc=[];
 %             obj.Driver=[];
 %             clear obj.Driver;
             
@@ -157,6 +159,10 @@ classdef CameraObj < handle
             pause(1);
             Conn(obj);
 
+        end
+        
+        function SetSchedule(obj,length,period)
+            SetSpecificTimes(obj.Timer,length,period)
         end
         
         function ResetTimer(obj)
