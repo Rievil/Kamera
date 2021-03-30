@@ -28,6 +28,8 @@ delete(obj);
 %<<<<<<< HEAD
 out = timerfind
 %%
+delete(out);
+%%
 T=readtable('Statlog.xlsx');
 T.Name=string(T.Name);
 
@@ -52,8 +54,25 @@ delete(g);
 vidobj = videoinput('gige', 1, 'BGR8');
 %%
 src = getselectedsource(vidobj);
+src.ColorTransformationFactoryListSelector='OptimizedMatrixFor3000K';
+src.ColorTransformationValue=1;
+
+src.ColorTransformationAuto='off';
+src.BalanceWhiteAuto='off';
+%             g.BalanceWhite='off';
+src.AcquisitionFrameRateEnable = 'True';
+src.AcquisitionFrameRate = 2;
+src.ExposureTime = 5e+4;
+src.ColorTransformationValue=1.0;
+% src.TriggerMode='off';
+% src.DeviceLinkHeartbeatTimeout=600000;
+% src.TimerDelay = 0;
+% src.TimerDuration = 100; %this is is usec, and must be 100'!!
+% src.CounterDuration=1;
+%OptimizedMatrixFor3000K
+%%
+
 %%
 snapshot = getsnapshot(vidobj);
+%
 imshow(snapshot);
-%%
-vidobj = videoinput('winvideo');

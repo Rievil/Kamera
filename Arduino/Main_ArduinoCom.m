@@ -1,4 +1,4 @@
-tic;
+
 obj=ArduinoObj(25);
 
 OpenConnection(obj);

@@ -9,6 +9,7 @@ classdef CameraObj < handle
         Filename;
         NPhoto=0;
         Driver;
+        VSrc;
         Period=10;    
         StatLog table;
         IP;
@@ -50,7 +51,8 @@ classdef CameraObj < handle
         
         function FindCamera(obj)
             tic;
-            
+%             obj.Driver=videoinput('gige', 1, 'BGR8');;
+%             vidobj = videoinput('gige', 1, 'BGR8');
             list=gigecamlist;
             obj.IP=char(char(list.IPAddress(1)));
 
@@ -58,40 +60,37 @@ classdef CameraObj < handle
             
         end
         
-        function ChangeSettings(obj)
-            tic;
-            obj.Driver.ColorTransformationAuto='off';
-            obj.Driver.BalanceWhiteAuto='off';
-%             g.BalanceWhite='off';
-            obj.Driver.AcquisitionFrameRateEnable = 'True';
-            obj.Driver.AcquisitionFrameRate = 2;
-            obj.Driver.ExposureTime = 5e+4;
-            obj.Driver.PixelFormat='BGR8';
-            obj.Driver.TriggerMode='off';
-            obj.Driver.DeviceLinkHeartbeatTimeout=600000;
-            obj.Driver.TimerDelay = 0;
-            obj.Driver.TimerDuration = 100; %this is is usec, and must be 100'!!
-            obj.Driver.Timeout=20;
-            obj.Driver.CounterDuration=1;
-%             g.DeviceLinkThroughputLimit=125000000;
-
-%             executeCommand(obj.Driver, 'CounterReset');
-%             executeCommand(obj.Driver, 'TimestampReset');
-            executeCommand(obj.Driver, 'TimestampLatch');
-            disp('Settings changed');
-            AddLogLine(obj,"SettingsChange",toc);
-        end
-        
         function Conn(obj)
             tic;
             
-            obj.Driver = gigecam(obj.IP);
+            obj.Driver = videoinput('gige', 1, 'BGR8');
+            obj.VSrc= getselectedsource(obj.Driver);
             
             ChangeSettings(obj);
             
             AddLogLine(obj,"ConnTime",toc);
             disp('Device ready');
         end
+        
+        function ChangeSettings(obj)
+            tic;
+            
+%             obj.VSrc.ColorTransformationFactoryListSelector='OptimizedMatrixFor3000K';
+%             obj.VSrc.ColorTransformationValue=1;
+% 
+%             obj.VSrc.ColorTransformationAuto='off';
+%             obj.VSrc.BalanceWhiteAuto='off';
+%             %             g.BalanceWhite='off';
+%             obj.VSrc.AcquisitionFrameRateEnable = 'True';
+%             obj.VSrc.AcquisitionFrameRate = 2;
+%             obj.VSrc.ExposureTime = 5e+4;
+%             obj.VSrc.ColorTransformationValue=1.0;
+            
+            disp('Settings changed');
+            AddLogLine(obj,"SettingsChange",toc);
+        end
+        
+
         
         function TestShoot(obj)            
             img=snapshot(obj.Driver);
@@ -123,8 +122,8 @@ classdef CameraObj < handle
 %                 obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.png',obj.NPhoto,obj.Timer.NextTime))];
                 OpenConnection(obj.Arduino);
                 LightUp(obj.Arduino);
-                
-                obj.Image = snapshot(obj.Driver);              
+%                 snapshot = getsnapshot(vidobj);
+                obj.Image = getsnapshot(obj.Driver);              
                 disp('-----Image succesfully stored----:-)');
                 GoDark(obj.Arduino);
                 pause(1);
@@ -132,7 +131,7 @@ classdef CameraObj < handle
     %             AddPhoto(obj,obj.Image);
                 StorePhoto(obj);
                 CloseConnection(obj.Arduino);
-                ResetDriver(obj);
+%                 ResetDriver(obj);
             catch ME
                
                 warning('Image wasnt stored');
