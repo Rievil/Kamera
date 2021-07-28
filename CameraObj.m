@@ -1,4 +1,4 @@
-classdef CameraObj < handle
+classdef CameraObj < Device
     properties 
         Timer;
         Namer;
@@ -15,10 +15,13 @@ classdef CameraObj < handle
         IP;
         Arduino;
         TimerRunning=0;
+        UIAxes;
     end
     
     methods
-        function obj=CameraObj(~)
+        function obj=CameraObj(parent)
+            obj@Device(parent);
+            
             obj.Timer=CameraTimer(obj);
             AddLogLine(obj,[],[]);
             obj.Arduino=ArduinoObj(obj);
@@ -57,7 +60,6 @@ classdef CameraObj < handle
             obj.IP=char(char(list.IPAddress(1)));
 
             AddLogLine(obj,"FindTime",toc);
-            
         end
         
         function Conn(obj)
@@ -75,14 +77,14 @@ classdef CameraObj < handle
         function ChangeSettings(obj)
             tic;
             
-%             obj.VSrc.ColorTransformationFactoryListSelector='OptimizedMatrixFor3000K';
-            obj.VSrc.ColorTransformationAuto='Off';
-            obj.VSrc.ColorTransformationValue=1;
+            obj.VSrc.ColorTransformationFactoryListSelector='OptimizedMatrixFor3000K';
+            obj.VSrc.ColorTransformationAuto='off';
+%             obj.VSrc.ColorTransformationValue=1;
             
             
             obj.VSrc.AcquisitionFrameRateEnable = 'True';
             obj.VSrc.AcquisitionFrameRate = 2;
-            obj.VSrc.ExposureTime = 7500;
+            obj.VSrc.ExposureTime = 2500;
             
             
             obj.VSrc.Gain=1;
@@ -93,8 +95,16 @@ classdef CameraObj < handle
 
         
         function TestShoot(obj)            
-            img=snapshot(obj.Driver);
-            imshow(img);
+
+%             if isvalid(obj.Arduino)
+            OpenConnection(obj.Arduino);
+%             end
+            LightUp(obj.Arduino);
+            obj.Image = getsnapshot(obj.Driver);  
+            
+            GoDark(obj.Arduino);
+            pause(1);
+            CloseConnection(obj.Arduino);
         end
         
         function SetTimer(obj,varargin)
@@ -120,7 +130,9 @@ classdef CameraObj < handle
                 
                 obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.png',obj.NPhoto,CameraObj.GetNow()))];
 %                 obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.png',obj.NPhoto,obj.Timer.NextTime))];
-                OpenConnection(obj.Arduino);
+                if isvalid(obj.Arduino)
+                    OpenConnection(obj.Arduino);
+                end
                 LightUp(obj.Arduino);
 %                 snapshot = getsnapshot(vidobj);
                 obj.Image = getsnapshot(obj.Driver);              
@@ -171,6 +183,40 @@ classdef CameraObj < handle
             obj.TimerRunning=0;
         end
         
+        function UIDrawImage(obj)
+%             h=app.CamObj.AutoFeatureHeight;
+%             w=app.CamObj.AutoFeatureWidth;
+%             
+%             hImage = image(app.UIAxes,zeros(h , w, 3)); 
+% %             pause(5);
+%             
+%             if w>h
+%                 r=double(h)/double(w);
+%             else
+%                 r=double(w)/double(h);
+%             end
+%             %ax=axis;
+%             %fig=gcf;
+%             app.UIAxes.Xlim=[0 w];
+%             app.UIAxes.Ylim=[0 h];
+%             pbaspect(app.UIAxes,[1 r 1]);
+%             preview(app.CamObj,hImage);
+            image(obj.Image,'Parent',obj.UIAxes);
+%             image(RGB,'Parent',ax);    
+            set(obj.UIAxes,'visible','on');
+            sz=size(obj.Image(:,:,1));
+            xlim(obj.UIAxes,[0 sz(2)]);
+            ylim(obj.UIAxes,[0 sz(1)]);
+            %app.UIAxes.Layer ='top';
+            %app.UIAxes='on';
+            %app.UIAxes.Grid
+            %grid on;
+            %set(fig,'position',[417 272 1086 701]);
+        end
+        
+        function UIPreview(obj)
+        end
+        
         function StorePhoto(obj)
             tic;
             if ~strcmp(obj.PhotoFolder,'')
@@ -202,6 +248,49 @@ classdef CameraObj < handle
         
         function delete(obj)
             delete(obj.Driver);
+        end
+    end
+    
+    methods %abstract
+
+        function list=ListDevices(obj)
+            list=gigecamlist;
+            obj.DeviceList=list;
+        end
+        
+        
+        function Connect(obj)
+            obj.IP=obj.DeviceList.IP(obj.DeviceListRow);
+            AddLogLine(obj,"FindTime",toc);
+            
+        end
+        
+        function StartDevice(obj)
+            Conn(obj);            
+        end
+        
+        function DrawGui(obj)
+            g=uigridlayout(obj.Fig);
+            g.RowHeight = {25,'1x'};
+            g.ColumnWidth = {75,'1x'};
+            
+            uia=uiaxes(g,'XLimMode','manual','YLimMode','manual');
+            uia.Layout.Row=2;
+            uia.Layout.Column=[1 2];
+            
+            obj.UIAxes=uia;
+            axis(obj.UIAxes, 'tight');
+            bu1=uibutton(g,'Text','Shoot','ButtonPushedFcn',@obj.MUIShoot);
+            bu1.Layout.Row=1;
+            bu1.Layout.Column=1;
+            
+        end
+    end
+    
+    methods %callbacks
+        function MUIShoot(obj,src,~)
+            TestShoot(obj);
+            UIDrawImage(obj);
         end
     end
     
