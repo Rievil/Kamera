@@ -23,7 +23,7 @@ classdef ArduinoObj < handle
         end
         
         function SetupConn(obj)
-            s = serialport('COM5',115200,'Timeout',2);
+            s = serialport('COM4',115200,'Timeout',2);
             configureTerminator(s,'CR/LF');
             obj.Conn=s;
         end

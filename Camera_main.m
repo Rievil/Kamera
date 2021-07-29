@@ -1,4 +1,4 @@
-obj=CameraObj;
+obj=CameraObj(1);
 %
 SetPhotoFolder(obj,'C:\Users\Richard\OneDrive\Měření\2021\Fotky_Disertace')
 %
