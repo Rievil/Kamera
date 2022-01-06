@@ -26,6 +26,10 @@ void loop()
 void Execute(int t) {
   switch (t)
   {
+    case 0:
+    // for comunicating with matlab when finding connected arduino
+      Serial.println("ACam");
+      break;
     case 1:
       Serial.println("Dark");
       state=1;

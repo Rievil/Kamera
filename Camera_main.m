@@ -1,6 +1,6 @@
 obj=CameraObj(1);
 %
-SetPhotoFolder(obj,'C:\Users\Richard\OneDrive\Měření\2021\Fotky_Disertace')
+SetPhotoFolder(obj,'C:\Users\uzivatel\OneDrive - Vysoké učení technické v Brně\Měření\2022\Data')
 %
 FindCamera(obj);
 
@@ -9,7 +9,7 @@ Conn(obj);
 SetPhotoFolder(obj,'C:\Users\uzivatel\OneDrive - Vysoké učení technické v Brně\Alkali_1')
 %%
 length=[hours(12),days(2)];
-period=[minutes(10),minutes(30)];
+period=[minutes(5),minutes(30)];
 
 SetSchedule(obj,length,period);
 %%

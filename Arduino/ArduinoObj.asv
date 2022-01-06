@@ -9,8 +9,6 @@ classdef ArduinoObj < handle
         State;
         ComPort='COM5';
         BaudRate=115200;
-        TimeOut=2;
-        TermnatorConf='CR/LF';
     end
     
     methods
@@ -26,9 +24,9 @@ classdef ArduinoObj < handle
         end
         
         function SetupConn(obj)
-            s = serialport(obj.ComPort,obj.BaudRate,'Timeout',obj.TimeOut);
+            s = serialport(obj.ComPort,obj.,'Timeout',2);
 
-            configureTerminator(s,obj.TermnatorConf);
+            configureTerminator(s,'CR/LF');
 
             obj.Conn=s;
             pause(3);
@@ -62,7 +60,9 @@ classdef ArduinoObj < handle
         
         function result=TestBoard(obj)
             write(obj.Conn,0,"int8");
+%             pause(0.2);
             obj.State=readline(obj.Conn);
+%             pause(0.2);
 
             if strcmp(obj.State,'ACam')
                 result=true;
