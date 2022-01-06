@@ -6,7 +6,7 @@ FindCamera(obj);
 
 Conn(obj);
 %%
-SetPhotoFolder(obj,'C:\Users\uzivatel\OneDrive - Vysoké učení technické v Brně\Alkali_1')
+% SetPhotoFolder(obj,'C:\Users\uzivatel\OneDrive - Vysoké učení technické v Brně\Alkali_1')
 %%
 length=[hours(12),days(2)];
 period=[minutes(5),minutes(30)];
@@ -20,7 +20,15 @@ ChangeSettings(obj);
 %%
 Shoot(obj);     
 %%
-
+obj.Arduino.OpenConnection;
+%%
+obj.Arduino.LightUp;
+%%
+obj.Arduino.GoDark;
+%%
+img=GetCurrentImage(obj);
+imshow(img);
+%%
 Preview(obj);
 %%
 EndPreview(obj);

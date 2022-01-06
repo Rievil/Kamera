@@ -38,7 +38,7 @@ classdef Device < handle
     end
     
     methods (Abstract)
-        ListDevices;
+        GetDeviceList;
         Connect;
         StartDevice;
         DrawGui;

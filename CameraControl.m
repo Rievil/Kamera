@@ -1,4 +1,4 @@
-classdef CameraControl < Module
+classdef CameraControl < DeviceShell
     %CAMERACONTROL Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -11,7 +11,8 @@ classdef CameraControl < Module
     
     methods
         function obj = CameraControl(parent)
-            obj@Module(parent);
+            obj@DeviceShell(parent);
+            
             obj.CameraObj=CameraObj(obj);
             obj.Marker=Marker(obj);
         end
@@ -48,12 +49,17 @@ classdef CameraControl < Module
             
         end
         
+        function list=GetDeviceList(obj)
+            list=GetDeviceList(obj.CameraObj);
+            obj.DeviceList=list;
+        end
+        
         function DrawGui(obj)
             g=uigridlayout(obj.Fig);
             g.RowHeight = {25,75,'1x'};
             g.ColumnWidth = {100,'3x','1x'};
             
-            uit=uitable;
+            uit=uitable(g);
             uit.Layout.Row=[2 3];
             uit.Layout.Column=1;
             

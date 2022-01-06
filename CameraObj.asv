@@ -33,17 +33,13 @@ classdef CameraObj < Device
             else
                 obj.PhotoFolder = uigetdir('C:\','Select folder for storing images');
             end
-            
-            if exist(obj.PhotoFolder)
-                CheckForSession(obj)
-            end
         end
         
         function CheckForSession(obj)
             statfilename=[char(obj.PhotoFolder) '\Statlog.xlsx'];
             if exist(statfilename)
                 T=readtable(statfilename);
-                obj.StatLog=T;
+                obj.obj.StatLog=T;
             end
         
         end
@@ -107,14 +103,15 @@ classdef CameraObj < Device
         
         function TestShoot(obj)            
 
-%             if ~obj.Arduino.Connected
+%             if isvalid(obj.Arduino)
             OpenConnection(obj.Arduino);
 %             end
-
             LightUp(obj.Arduino);
             obj.Image = getsnapshot(obj.Driver);  
             
             GoDark(obj.Arduino);
+            pause(1);
+            CloseConnection(obj.Arduino);
         end
         
         function SetTimer(obj,varargin)
@@ -122,7 +119,6 @@ classdef CameraObj < Device
         end
         
         function Preview(obj)
-            
             OpenConnection(obj.Arduino);
             LightUp(obj.Arduino);
             preview(obj.Driver);
@@ -135,19 +131,15 @@ classdef CameraObj < Device
             ResetDriver(obj);
         end
         
-        function img=GetCurrentImage(obj)
-            img=getsnapshot(obj.Driver);  
-        end
-        
         function Shoot(obj)
             tic;
             try
                 
                 obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.png',obj.NPhoto,CameraObj.GetNow()))];
 %                 obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.png',obj.NPhoto,obj.Timer.NextTime))];
-%                 if isvalid(obj.Arduino)
-                OpenConnection(obj.Arduino);
-%                 end
+                if isvalid(obj.Arduino)
+                    OpenConnection(obj.Arduino);
+                end
                 LightUp(obj.Arduino);
 %                 snapshot = getsnapshot(vidobj);
                 obj.Image = getsnapshot(obj.Driver);              
@@ -157,7 +149,7 @@ classdef CameraObj < Device
                 AddLogLine(obj,"ShootTime",toc);
     %             AddPhoto(obj,obj.Image);
                 StorePhoto(obj);
-%                 CloseConnection(obj.Arduino);
+                CloseConnection(obj.Arduino);
 %                 ResetDriver(obj);
             catch ME
                
@@ -194,6 +186,23 @@ classdef CameraObj < Device
         end
         
         function UIDrawImage(obj)
+%             h=app.CamObj.AutoFeatureHeight;
+%             w=app.CamObj.AutoFeatureWidth;
+%             
+%             hImage = image(app.UIAxes,zeros(h , w, 3)); 
+% %             pause(5);
+%             
+%             if w>h
+%                 r=double(h)/double(w);
+%             else
+%                 r=double(w)/double(h);
+%             end
+%             %ax=axis;
+%             %fig=gcf;
+%             app.UIAxes.Xlim=[0 w];
+%             app.UIAxes.Ylim=[0 h];
+%             pbaspect(app.UIAxes,[1 r 1]);
+%             preview(app.CamObj,hImage);
             image(obj.Image,'Parent',obj.UIAxes);
 %             image(RGB,'Parent',ax);    
             set(obj.UIAxes,'visible','on');
@@ -246,7 +255,7 @@ classdef CameraObj < Device
     
     methods %abstract
 
-        function list=GetDeviceList(obj)
+        function list=ListDevices(obj)
             list=gigecamlist;
             obj.DeviceList=list;
         end

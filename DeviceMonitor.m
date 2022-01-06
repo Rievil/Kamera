@@ -11,12 +11,11 @@ classdef DeviceMonitor < handle
         SelectedDevice=0;
         SelectedDeviceType;
         UIDeviceList;
-        
     end
     
     methods
         function obj = DeviceMonitor(~)
-            obj.DeviceTypes=["CameraObj"];
+            obj.DeviceTypes=["CameraControl"];
         end
         
         function StartWindow(obj)
@@ -66,7 +65,7 @@ classdef DeviceMonitor < handle
         
         function ListDevices(obj)
             if obj.DeviceBool
-                T=obj.Device.ListDevices;
+                T=obj.Device.GetDeviceList;
                 if size(T,1)>0
                     obj.UIDeviceList.Data=T;
                 end
@@ -88,11 +87,10 @@ classdef DeviceMonitor < handle
         function MakeDevice(obj)
             name=obj.DeviceTypes(obj.SelectedDeviceType);
             switch name
-                case 'CameraObj'
-                    obj2=CameraObj(obj);
+                case 'CameraControl'
+                    obj2=CameraControl(obj);
                 case 'TiePieSampler'
             end
-            
             obj.Device = obj2;
         end
         
@@ -147,15 +145,6 @@ classdef DeviceMonitor < handle
             but3.Layout.Column=[3 4];     
         end
         
-%         function ConnectToDevice(obj)
-%             clear obj.Osc;
-%             k = obj.IDSelectedDevice-1;
-%             item = obj.Lib.DeviceList.getItemByIndex(k);
-%             if item.canOpen(DEVICETYPE.OSCILLOSCOPE)
-%                 obj.Osc = item.openOscilloscope();
-%             end
-%             LoadPropertySetup(obj);
-%         end
         
         function DrawGui(obj)
 %             obj.DevFig=uifigure;

@@ -7,6 +7,7 @@ classdef Module < handle
         Parent;
         Fig;
         FigBool=false;
+        ListDevices;
     end
     
     methods
@@ -31,6 +32,7 @@ classdef Module < handle
     end
     
     methods (Abstract)
+%         GetDeviceList;
         Pack
         Populate
         DrawGui

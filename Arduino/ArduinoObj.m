@@ -11,6 +11,7 @@ classdef ArduinoObj < handle
         BaudRate=115200;
         TimeOut=2;
         TermnatorConf='CR/LF';
+        Connected=false;
     end
     
     methods
@@ -22,6 +23,7 @@ classdef ArduinoObj < handle
             if ~isempty(instrfind)
                  fclose(instrfind);
                   delete(instrfind);
+                  obj.Connected=false;
             end
         end
         
@@ -32,6 +34,7 @@ classdef ArduinoObj < handle
 
             obj.Conn=s;
             pause(3);
+            obj.Connected=true;
         end
         
         function FindPorts(obj)
@@ -48,14 +51,15 @@ classdef ArduinoObj < handle
                 obj.ComPort=char(list(idx(i)));
                 try
                     SetupConn(obj);
+                    
                     if TestBoard(obj)
                         fprintf("Cam arduino connected on port '%s'\n",obj.ComPort);
                         break;
                     else
-                        
+                        CloseConnection(obj);
                     end
                 catch ME
-                    
+                    CloseConnection(obj);
                 end
             end
         end
@@ -82,13 +86,17 @@ classdef ArduinoObj < handle
         end
         
         function OpenConnection(obj)
-            CloseAllConn(obj);
-            FindPorts(obj);
-            pause(0.5);
+            if ~obj.Connected
+                CloseAllConn(obj);
+                FindPorts(obj);
+                pause(0.5);
+            end
         end
         
         function CloseConnection(obj)
             delete(obj.Conn);
+            obj.Connected=false;
+            fprintf("Closing connection with '%s'\n",obj.ComPort);
         end
     end
 end
