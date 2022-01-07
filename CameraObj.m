@@ -14,8 +14,10 @@ classdef CameraObj < Device
         StatLog table;
         IP;
         Arduino;
+        
         TimerRunning=0;
         UIAxes;
+        ExpTime=2500;
     end
     
     methods
@@ -79,6 +81,7 @@ classdef CameraObj < Device
             obj.Driver = videoinput('gige', 1, 'BGR8');
             obj.VSrc= getselectedsource(obj.Driver);
             
+            obj.IsRunning=true;
             ChangeSettings(obj);
             
             AddLogLine(obj,"ConnTime",toc);
@@ -95,7 +98,7 @@ classdef CameraObj < Device
             
             obj.VSrc.AcquisitionFrameRateEnable = 'True';
             obj.VSrc.AcquisitionFrameRate = 2;
-            obj.VSrc.ExposureTime = 2500;
+            obj.VSrc.ExposureTime = obj.ExpTime;
             
             
             obj.VSrc.Gain=1;
@@ -103,6 +106,15 @@ classdef CameraObj < Device
             AddLogLine(obj,"SettingsChange",toc);
         end
         
+        function LightUp(obj)
+            OpenConnection(obj.Arduino);
+            LightUp(obj.Arduino);
+        end
+        
+        function GoDark(obj)
+            OpenConnection(obj.Arduino);
+            GoDark(obj.Arduino);
+        end
 
         
         function TestShoot(obj)            
@@ -144,21 +156,20 @@ classdef CameraObj < Device
             try
                 
                 obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.png',obj.NPhoto,CameraObj.GetNow()))];
-%                 obj.Filename=[obj.PhotoFolder,'\', char(sprintf('%d_Image_%s.png',obj.NPhoto,obj.Timer.NextTime))];
-%                 if isvalid(obj.Arduino)
                 OpenConnection(obj.Arduino);
-%                 end
                 LightUp(obj.Arduino);
-%                 snapshot = getsnapshot(vidobj);
-                obj.Image = getsnapshot(obj.Driver);              
+                
+                obj.Image = getsnapshot(obj.Driver);  
+                
                 disp('-----Image succesfully stored----:-)');
+                
                 GoDark(obj.Arduino);
+                
                 pause(1);
                 AddLogLine(obj,"ShootTime",toc);
-    %             AddPhoto(obj,obj.Image);
+
                 StorePhoto(obj);
-%                 CloseConnection(obj.Arduino);
-%                 ResetDriver(obj);
+
             catch ME
                
                 warning('Image wasnt stored');
@@ -172,13 +183,16 @@ classdef CameraObj < Device
         end
         
         function ResetDriver(obj)
+            obj.obj.IsRunning=false;
             tic;
             disp('Reseting driver...');
             delete(obj.Driver);
             obj.VSrc=[];
+            
             AddLogLine(obj,"ResetTime",toc);
             obj.Image=[];
             pause(1);
+            
             Conn(obj);
 
         end
@@ -194,17 +208,13 @@ classdef CameraObj < Device
         end
         
         function UIDrawImage(obj)
-            image(obj.Image,'Parent',obj.UIAxes);
-%             image(RGB,'Parent',ax);    
+            image(obj.Image,'Parent',obj.UIAxes); 
             set(obj.UIAxes,'visible','on');
+            
             sz=size(obj.Image(:,:,1));
+            
             xlim(obj.UIAxes,[0 sz(2)]);
             ylim(obj.UIAxes,[0 sz(1)]);
-            %app.UIAxes.Layer ='top';
-            %app.UIAxes='on';
-            %app.UIAxes.Grid
-            %grid on;
-            %set(fig,'position',[417 272 1086 701]);
         end
         
         function UIPreview(obj)
@@ -278,6 +288,7 @@ classdef CameraObj < Device
             bu1.Layout.Column=1;
             
         end
+        
     end
     
     methods %callbacks

@@ -8,14 +8,16 @@ classdef DeviceMonitor < handle
         DeviceBool=0;
         Device;
         DeviceTypes;
+        App;
+        ConDeviceCount=0;
         SelectedDevice=0;
-        SelectedDeviceType;
+        SelectedDeviceType=1;
         UIDeviceList;
     end
     
     methods
         function obj = DeviceMonitor(~)
-            obj.DeviceTypes=["CameraControl"];
+            obj.DeviceTypes=["CameraObj"];
         end
         
         function StartWindow(obj)
@@ -34,9 +36,13 @@ classdef DeviceMonitor < handle
                 delete(obj.Fig);
                 obj.Fig=[];
                 try
-                    obj.Device.StartDevice;
-                    DrawGui(obj);
-                    DrawGui(obj.Device);
+                    if ~obj.Device.IsRunning
+                        obj.Device.StartDevice;
+                    end
+                    
+                    if ~obj.App.UIFigBool
+                        DrawGui(obj.App);
+                    end
                 catch ME
                     disp('Cant start to selected device');
                     disp(ME.message);
@@ -87,11 +93,15 @@ classdef DeviceMonitor < handle
         function MakeDevice(obj)
             name=obj.DeviceTypes(obj.SelectedDeviceType);
             switch name
-                case 'CameraControl'
-                    obj2=CameraControl(obj);
+                case 'CameraObj'
+                    obj2=CameraObj(obj);
+                    app=CameraApp(obj);
                 case 'TiePieSampler'
             end
             obj.Device = obj2;
+            obj.App=app;
+            obj.ConDeviceCount=1;
+            obj.App.AdDevice(obj.Device);
         end
         
         function stash=Pack(obj)
@@ -102,10 +112,7 @@ classdef DeviceMonitor < handle
             
         end
         
-        function dim=GetScreenDim(obj,W,H)
-            Pix_SS = get(0,'screensize');
-            dim=[Pix_SS(3)/2-W/2,Pix_SS(4)/2-H/2,W,H];
-        end
+
         
         function DrawDeviceSelection(obj)
 
@@ -125,7 +132,6 @@ classdef DeviceMonitor < handle
                 'ValueChangedFcn',@obj.MSelectDeviceType);
             dd.Layout.Row=1;
             dd.Layout.Column=2;
-            obj.SelectedDeviceType=1;
             
             uit=uitable(g,'CellSelectionCallback',@obj.MRowSelected);
             uit.Layout.Row=2;
@@ -148,37 +154,38 @@ classdef DeviceMonitor < handle
         
         function DrawGui(obj)
 %             obj.DevFig=uifigure;
-            obj.DevFig=uifigure('position',GetScreenDim(obj,900,600));
-
-            
-
-            g=uigridlayout(obj.DevFig);
-            g.RowHeight = {25,75,'1x',25};
-            g.ColumnWidth = {300,'3x',250};
-            
-            uit=uitable(g);
-            uit.Layout.Row=[2 3];
-            uit.Layout.Column=1;
-            
-            
-            bu1=uibutton(g,'Text','Select folder',...
-                'ButtonPushedFcn',@obj.MSetFolder);
-            bu1.Layout.Row=1;
-            bu1.Layout.Column=1;
-            
-            p1=uipanel(g,'Title','Device control panel');
-            p1.Layout.Row=[2 4];
-            p1.Layout.Column=2;            
-            SetFig(obj.Device,p1);
-            
-            
-            p2=uipanel(g,'Title','Marker Control');
-            p2.Layout.Row=2;
-            p2.Layout.Column=3;
-            
-            p3=uipanel(g,'Title','Export settings');
-            p3.Layout.Row=[3 4];
-            p3.Layout.Column=3;
+%             DrawGui(obj.App);
+%             obj.DevFig=uifigure('position',GetScreenDim(obj,900,600));
+% 
+%             
+% 
+%             g=uigridlayout(obj.DevFig);
+%             g.RowHeight = {25,75,'1x',25};
+%             g.ColumnWidth = {300,'3x',250};
+%             
+%             uit=uitable(g);
+%             uit.Layout.Row=[2 3];
+%             uit.Layout.Column=1;
+%             
+%             
+%             bu1=uibutton(g,'Text','Select folder',...
+%                 'ButtonPushedFcn',@obj.MSetFolder);
+%             bu1.Layout.Row=1;
+%             bu1.Layout.Column=1;
+%             
+%             p1=uipanel(g,'Title','Device control panel');
+%             p1.Layout.Row=[2 4];
+%             p1.Layout.Column=2;            
+%             SetFig(obj.Device,p1);
+%             
+%             
+%             p2=uipanel(g,'Title','Marker Control');
+%             p2.Layout.Row=2;
+%             p2.Layout.Column=3;
+%             
+%             p3=uipanel(g,'Title','Export settings');
+%             p3.Layout.Row=[3 4];
+%             p3.Layout.Column=3;
             
         end
     end
@@ -208,6 +215,11 @@ classdef DeviceMonitor < handle
         
         function MListDevice(obj,~,~)
             ListDevices(obj);
+        end
+        
+        function dim=GetScreenDim(obj,W,H)
+            Pix_SS = get(0,'screensize');
+            dim=[Pix_SS(3)/2-W/2,Pix_SS(4)/2-H/2,W,H];
         end
     end
     

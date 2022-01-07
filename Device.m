@@ -10,6 +10,7 @@ classdef Device < handle
         Fig;
         FigBool=false;
         Marker;
+        IsRunning=false;
     end
     
     methods

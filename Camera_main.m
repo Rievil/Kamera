@@ -102,7 +102,7 @@ BW = imbinarize(gimg,'adaptive', 'Sensitivity',0.4,'ForegroundPolarity','dark');
 imshow(BW);
 %%
 dm=DeviceMonitor;
-
+%%
 dm.Start;
 %%
 dm.StartDevice;

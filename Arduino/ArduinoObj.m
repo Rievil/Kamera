@@ -7,6 +7,7 @@ classdef ArduinoObj < handle
         Conn;
         Port;
         State;
+        StateBool=false;
         ComPort='COM5';
         KnownPort='';
         KnownPortBool=false;
@@ -74,25 +75,29 @@ classdef ArduinoObj < handle
         function result=TestBoard(obj)
             write(obj.Conn,0,"int8");
             obj.State=readline(obj.Conn);
-            fprintf("Cam arduino is on port '%s' !\n",obj.ComPort);
+            
             if strcmp(obj.State,'ACam')
                 result=true;
                 obj.KnownPort=obj.ComPort;
                 obj.KnownPortBool=true;
+                fprintf("Cam arduino is on port '%s' !\n",obj.ComPort);
             else
                 result=false;
                 obj.KnownPortBool=false;
+                fprintf("Cam arduino is NOT port '%s'...!\n",obj.ComPort);
             end
         end
         
         function LightUp(obj)
             write(obj.Conn,1,"int8");
             obj.State=readline(obj.Conn);
+            obj.StateBool=true;
         end
         
         function GoDark(obj)
             write(obj.Conn,2,"int8");
             obj.State=readline(obj.Conn);
+            obj.StateBool=false;
         end
         
         function OpenConnection(obj)
@@ -105,13 +110,11 @@ classdef ArduinoObj < handle
                 else
                     FindPorts(obj);
                 end
-                
-                
-                
+
                 pause(0.5);
                 
                 if obj.KnownPortBool
-                    disp("Successfully connected to CamArduino");
+                    disp("Successfully connected to CamArduino!");
                 else
                     disp("Can't find Cam arduino in com ports. Is arduino connected?");
                 end
