@@ -68,7 +68,9 @@ classdef ArduinoObj < handle
                 end
             end
             
-            
+            if ~obj.KnownPortBool
+                fprintf("Can't find Cam arCam arduino is on port '%s' !\n",obj.ComPort);
+            end
         end
         
         function result=TestBoard(obj)
@@ -106,15 +108,7 @@ classdef ArduinoObj < handle
                     FindPorts(obj);
                 end
                 
-                
-                
                 pause(0.5);
-                
-                if obj.KnownPortBool
-                    disp("Successfully connected to CamArduino");
-                else
-                    disp("Can't find Cam arduino in com ports. Is arduino connected?");
-                end
             end
         end
         
