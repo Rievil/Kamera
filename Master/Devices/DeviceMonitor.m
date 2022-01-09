@@ -37,16 +37,22 @@ classdef DeviceMonitor < handle
                 obj.Fig=[];
                 try
                     if ~obj.Device.IsRunning
+                        fprintf("Starting device");
                         obj.Device.StartDevice;
                     end
                     
                     if ~obj.App.UIFigBool
+                        warning("Openig control window");
                         DrawGui(obj.App);
                     end
+                    
+                    
                 catch ME
-                    disp('Cant start to selected device');
+                    warning('Cant start to selected device');
                     disp(ME.message);
                 end
+            else
+                warning("No device avaliable");
             end
         end
     end
