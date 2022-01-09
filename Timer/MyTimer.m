@@ -9,6 +9,8 @@ classdef MyTimer < handle
         NextTime;
         RCount=0;
         Parent;
+        TimeSchedule table;
+        Schedule=0;
     end
     
     methods
@@ -38,6 +40,30 @@ classdef MyTimer < handle
             StartTimer(obj);
         end
         
+        function SetSpecificTimes(obj,length,period)
+            starttime=now();
+            T=table([],[],[],'VariableNames',{'Etap','Period','Time'});
+            etaps=numel(length);
+
+            for j=1:etaps
+                samplesperetap=length(j)/period(j);
+                cycle=0;
+                if j==1
+                    d = datetime(starttime,'ConvertFrom','datenum','Format','yyyy.MM.dd HH:mm:ss');
+                else
+                    d=T.Time(end);
+                end
+
+                for i=1:1:samplesperetap
+                    cycle=cycle+1;
+                    next=datetime(datenum(d)+i*datenum(period(j)),'ConvertFrom','datenum','Format','yyyy.MM.dd HH:mm:ss');
+
+                    T=[T; table(j,cycle,next,'VariableNames',{'Etap','Period','Time'})];
+                end
+            end
+            obj.TimeSchedule=T;
+            obj.Schedule=0;
+        end
 
         function StartTimer(obj)
             obj.Start=datetime(now,'ConvertFrom','datenum','Format','yyyy-MM-dd HH:mm:ss');            

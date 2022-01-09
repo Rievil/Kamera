@@ -10,6 +10,10 @@ classdef CameraTimer < handle
         RCount=0;
         Parent;
         Period;
+        
+        ScheduleRow=0;
+        TimeSchedule table;
+        Schedule=0;
     end
     
     methods
@@ -45,10 +49,37 @@ classdef CameraTimer < handle
                 switch lower(val{1,1})
                     case 'period'
                         obj.Period=val{2};
+                    case 'schedule'
                     otherwise
                 end
                 val(1:2)=[];
             end
+        end
+        
+        function SetSpecificTimes(obj,length,period)
+            starttime=now();
+            T=table([],[],[],'VariableNames',{'Etap','Period','Time'});
+            etaps=numel(length);
+
+            for j=1:etaps
+                samplesperetap=length(j)/period(j);
+                cycle=0;
+                if j==1
+                    d = datetime(starttime,'ConvertFrom','datenum','Format','yyyy.MM.dd HH:mm:ss');
+                else
+                    d=T.Time(end);
+                end
+
+                for i=1:1:samplesperetap
+                    cycle=cycle+1;
+                    next=datetime(datenum(d)+i*datenum(period(j)),'ConvertFrom','datenum','Format','yyyy.MM.dd HH:mm:ss');
+
+                    T=[T; table(j,cycle,next,'VariableNames',{'Etap','Period','Time'})];
+                end
+            end
+            disp('Scheduler setuped...');
+            obj.TimeSchedule=T;
+            obj.Schedule=1;
         end
         
         function TestStart(obj)
@@ -60,13 +91,23 @@ classdef CameraTimer < handle
         end
 
         function StartTimer(obj)
-            if obj.RCount==1
-                obj.Start=datetime(now,'ConvertFrom','datenum','Format','yyyy-MM-dd HH:mm:ss');            
-                obj.NextTime=obj.Start+minutes(obj.Period);    
+
+%                         obj.TimeSchedule=[];
+%             obj.Schedule=0;
+%             obj.ScheduleRow=0;
+
+            if obj.Schedule==1
+                obj.ScheduleRow=obj.ScheduleRow+1;
+                obj.NextTime=obj.TimeSchedule.Time(obj.ScheduleRow);
             else
-                obj.NextTime=obj.NextTime+minutes(obj.Period);
+                if obj.RCount==1
+                    obj.Start=datetime(now,'ConvertFrom','datenum','Format','yyyy-MM-dd HH:mm:ss');            
+                    obj.NextTime=obj.Start+minutes(obj.Period);    
+                else
+                    obj.NextTime=obj.NextTime+minutes(obj.Period);
+                end
             end
-        
+           
             startat(obj.Timer,year(obj.NextTime),month(obj.NextTime),day(obj.NextTime),hour(obj.NextTime),minute(obj.NextTime),second(obj.NextTime));
         end
         
@@ -101,6 +142,10 @@ classdef CameraTimer < handle
             Stop(obj);
             out = timerfind;
             delete(out);
+            
+            obj.TimeSchedule=[];
+            obj.Schedule=0;
+            obj.ScheduleRow=0;
         end
         
         function Stop(obj)
