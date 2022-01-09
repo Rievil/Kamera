@@ -138,6 +138,7 @@ classdef CameraApp < GenApp
             
             
             
+            
         end
         
         function MakeStartDate(obj)
