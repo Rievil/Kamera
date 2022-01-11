@@ -92,10 +92,6 @@ classdef CameraTimer < handle
 
         function StartTimer(obj)
 
-%                         obj.TimeSchedule=[];
-%             obj.Schedule=0;
-%             obj.ScheduleRow=0;
-
             if obj.Schedule==1
                 obj.ScheduleRow=obj.ScheduleRow+1;
                 obj.NextTime=obj.TimeSchedule.Time(obj.ScheduleRow);

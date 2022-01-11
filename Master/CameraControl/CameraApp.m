@@ -13,6 +13,8 @@ classdef CameraApp < GenApp
         MinutesStartSet=0;
         FinStartDateTime;
         Session;
+        SchedTable table;
+        UISTable;
     end
     
     methods
@@ -64,10 +66,13 @@ classdef CameraApp < GenApp
             p5.Layout.Column=2;
             
             DrawControls(obj,p1);
-            DrawScheduler(obj,p4);
+           
             
             SetFig(obj.Session,p5);
             DrawGui(obj.Session);
+            CheckForOpenSession(obj.Session);
+            
+            DrawScheduler(obj,p4);
         end
         
         function DrawControls(obj,pan)
@@ -121,12 +126,13 @@ classdef CameraApp < GenApp
             but2.Layout.Row=4;
             but2.Layout.Column=[1 2];
             
+     
             
         end
         
         function DrawScheduler(obj,pan)
             g = uigridlayout(pan);
-            g.RowHeight = {50,50,25,'1x'};
+            g.RowHeight = {50,50,'1x',25,25};
             g.ColumnWidth = {25,'1x',50,50};
             
             lb1=uilabel(g,'Text','Start date:');
@@ -165,20 +171,137 @@ classdef CameraApp < GenApp
             efM.Layout.Row=2;
             efM.Layout.Column=4;
             
+            if size(obj.Session.SchedTable,1)==0
+                obj.Session.SchedTable=GetSchedRow(obj.Session);
+            end
             
+            uit=uitable(g,'Data',obj.Session.SchedTable,'ColumnWidth',{80,'1x',80,'1x'},...
+            'ColumnEditable',[true true true true],...
+                'CellEditCallback',@obj.MSetSchTable);
+            uit.Layout.Row=3;
+            uit.Layout.Column=[1 4];
+            obj.Session.UISTable=uit;
             
+            lb1=uilabel(g,'Text','Parts');
+            lb1.Layout.Row=4;
+            lb1.Layout.Column=[1 2];
+            
+            spin = uispinner(g,'Limits', [1 10],'ValueChangedFcn',@obj.MSchedulerRowChange);
+            spin.Layout.Row=4;
+            spin.Layout.Column=[3 4];
+            
+            PlotScheduler(obj);
             
         end
         
         
+        
+        function DrawMissingImage(obj)
+            I=zeros(300,300);
+            I = insertText(I,[150,150],'Missing image','AnchorPoint','center','FontSize',16);
+            obj.ImAxes.ImageSource =I;
+        end
+        
         function MakeStartDate(obj)
-            obj.FinStartDateTime=obj.StartDate+hours(obj.HourStartSet)+minutes(obj.MinutesStartSet);
+            obj.FinStartDateTime=obj.DateStartSet+hours(obj.HourStartSet)+minutes(obj.MinutesStartSet);
+        end
+        
+        function T=MakeSchedule(obj)
+            T0=obj.Session.SchedTable;
+            schcount=size(T0,1);
+            T=table;
+            if schcount>0
+                for i=1:schcount
+                    T=[T; table(GetTimeVar(obj,char(T0.LengthType(i)),T0.nL(i)),...
+                        GetTimeVar(obj,char(T0.PeriodType(i)),T0.nP(i)),'VariableNames',{'Len','Per'})];
+                end
+            end
+            
+            
+        end
+        
+        function PlotScheduler(obj)
+            ax=obj.TimeLinesAxes;
+            hold(ax,'on');
+            grid(ax,'on');
+            cla(ax);
+            T=MakeSchedule(obj);
+            MakeStartDate(obj);
+            x=[];
+            y2=[];
+            nowar=datetime(now(),'ConvertFrom','datenum');
+            for i=1:size(T,1)
+                len=seconds(T.Len(i));
+                per=seconds(T.Per(i));
+
+                count=len/per;
+                time=linspace(per,per*count,count);
+                period=linspace(per,per,count);
+
+                y2=[y2; period'];
+
+                if i>1
+                    time=time+x(end);
+                    x=[x; time'];
+                else
+                    x=[x; time'];
+                end
+            end
+
+            x=[0; x];
+            
+            
+            y2=[0; y2];
+            x=seconds(x)+obj.FinStartDateTime;
+            y=1:1:numel(x);
+            y=y';
+
+            scatter(ax,x,y,'o');
+            plot(ax,[nowar nowar],[0 max(y)],'r-');
+            ylabel(ax,'Photo count');
+            xlabel(ax,'Time');
+            ylim(ax,[min(y),max(y)]);
+            xlim(ax,[min(x)-hours(1), max(x)+hours(1)]);
+            datetick(ax,'x','yyyy-mm-dd','keeplimits')
+%             xlim(ax,[nowar,nowar+days(1)]);
+        end
+        
+        
+        function val=GetTimeVar(obj,type,count)
+            
+            switch lower(char(type))
+                case 'minute'
+                    val=minutes(count);
+                case 'hour'
+                    val=hours(count);
+                case 'day'
+                    val=hours(count*24);
+                case 'week'
+                    val=hours(count*24*7);
+            end
         end
         
     end
     
     
     methods %callbacks
+        
+        function MSetSchTable(obj,src,evnt)
+            obj.Session.SchedTable=src.Data;
+            PlotScheduler(obj);
+        end
+        
+        function MSchedulerRowChange(obj,src,~)
+            if src.Value>size(obj.Session.SchedTable,1)
+                AddSchRow(obj.Session);
+            elseif src.Value<size(obj.Session.SchedTable,1)
+                RemoveSchRow(obj.Session);
+            end
+            obj.Session.UISTable.Data=obj.Session.SchedTable;
+            PlotScheduler(obj);
+        end
+        
+        
         function MShoot(obj,src,evnt)
             img=GetCurrentImage(obj.Device);
             obj.ImAxes.ImageSource =img;
