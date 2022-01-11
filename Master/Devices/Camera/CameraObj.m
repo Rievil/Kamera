@@ -76,16 +76,20 @@ classdef CameraObj < Device
         end
         
         function Conn(obj)
-            tic;
-            
-            obj.Driver = videoinput('gige', 1, 'BGR8');
-            obj.VSrc= getselectedsource(obj.Driver);
-            
-            obj.IsRunning=true;
-            ChangeSettings(obj);
-            
-            AddLogLine(obj,"ConnTime",toc);
-            disp('Device ready');
+            if ~obj.IsRunning
+                tic;
+
+                obj.Driver = videoinput('gige', 1, 'BGR8');
+                obj.VSrc= getselectedsource(obj.Driver);
+
+                obj.IsRunning=true;
+                ChangeSettings(obj);
+
+                AddLogLine(obj,"ConnTime",toc);
+                disp('Device ready');
+            else
+                disp('Device is already running.');
+            end
         end
         
         function ChangeSettings(obj)
@@ -149,6 +153,7 @@ classdef CameraObj < Device
         
         function img=GetCurrentImage(obj)
             img=getsnapshot(obj.Driver);  
+%             AddPhoto(obj,img);
         end
         
         function Shoot(obj)
@@ -269,7 +274,8 @@ classdef CameraObj < Device
         end
         
         function StartDevice(obj)
-            Conn(obj);            
+            Conn(obj);        
+            OpenConnection(obj.Arduino);
         end
         
         function DrawGui(obj)

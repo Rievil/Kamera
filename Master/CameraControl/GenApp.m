@@ -46,12 +46,14 @@ classdef GenApp < handle
     methods %callbacks
         function MFigClose(obj,src,evnt)
             obj.UIFigBool=false;
+            CloseChild(obj);
             delete(obj.UIFig);
         end
     end
     
     methods (Abstract)
         AppDrawGui;
+        CloseChild;
     end
 end
 

@@ -37,8 +37,10 @@ classdef DeviceMonitor < handle
                 obj.Fig=[];
                 try
                     if ~obj.Device.IsRunning
-                        fprintf("Starting device");
+                        fprintf("Starting device\n");
                         obj.Device.StartDevice;
+                    else
+                        fprintf("Device is already running \n");
                     end
                     
                     if ~obj.App.UIFigBool

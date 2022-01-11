@@ -17,7 +17,9 @@ T=table(length',period','VariableNames',{'Len','Per'});
 %%
 fig=uifigure;
 
-hold on;
+
+ax=uiaxes(fig);
+hold(ax,'on');
 x=[];
 y2=[];
 nowar=datetime(now(),'ConvertFrom','datenum');
@@ -48,10 +50,10 @@ x=nowar+seconds(x);
 y=1:1:numel(x);
 y=y';
 
-scatter(x,y,'o');
-plot([nowar nowar],[0 max(y)],'r-');
-ylabel('Photo count');
-xlabel('Time');
+scatter(ax,x,y,'o');
+plot(ax,[nowar nowar],[0 max(y)],'r-');
+ylabel(ax,'Photo count');
+xlabel(ax,'Time');
 % xlim([nowar nowar+hours(24)]);
 %%
 
@@ -84,25 +86,12 @@ ResetTimer(obj);
 StartTimerShoot(obj);
 %%
 delete(obj);
-%%
-img=obj.Image;
 
-imshow(img);
-%%
-obj = CameraControl(1);
-%%
-obj.StartWindow;
-%%
-gimg=rgb2gray(img);
-histogram(gimg);
-%%
-T=70;
-BW = imbinarize(gimg,'adaptive', 'Sensitivity',0.4,'ForegroundPolarity','dark');
-
-imshow(BW);
 %%
 dm=DeviceMonitor;
-%%
+
 dm.Start;
 %%
 dm.StartDevice;
+%%
+dm.Device.GoDark;

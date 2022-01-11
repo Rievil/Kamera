@@ -12,22 +12,34 @@ classdef CameraApp < GenApp
         HourStartSet=0;
         MinutesStartSet=0;
         FinStartDateTime;
+        Session;
     end
     
     methods
         function obj = CameraApp(parent)
             obj@GenApp(parent);
+            obj.Session=Session(obj);
         end
         
-
+        function UpdateImage(obj,img)
+            if obj.UIFigBool
+                obj.ImAxes.ImageSource =img;
+            end
+        end
     end
     
     
     methods %abstract
+        function CloseChild(obj)
+            obj.Session.Save;
+        end
+        
+        
+        
         function AppDrawGui(obj)
             g = uigridlayout(obj.UIFig);
-            g.RowHeight = {450,'1x','1x'};
-            g.ColumnWidth = {250,'2x'};
+            g.RowHeight = {'1x','1x','1x'};
+            g.ColumnWidth = {250,300,'1x'};
             
             p1=uipanel(g,'Title','Controls');
             p1.Layout.Row=1;
@@ -35,20 +47,27 @@ classdef CameraApp < GenApp
             
             p2 = uiimage(g);
             p2.Layout.Row=[1 2];
-            p2.Layout.Column=2;
+            p2.Layout.Column=3;
             obj.ImAxes=p2;
             
             p3=uiaxes(g);
             p3.Layout.Row=3;
-            p3.Layout.Column=2;
+            p3.Layout.Column=3;
             obj.TimeLinesAxes=p3;
             
             p4=uipanel(g,'Title','Scheduler');
             p4.Layout.Row=[2 3];
             p4.Layout.Column=1;
             
+            p5=uipanel(g,'Title','Image panel');
+            p5.Layout.Row=[1 3];
+            p5.Layout.Column=2;
+            
             DrawControls(obj,p1);
             DrawScheduler(obj,p4);
+            
+            SetFig(obj.Session,p5);
+            DrawGui(obj.Session);
         end
         
         function DrawControls(obj,pan)
@@ -66,6 +85,7 @@ classdef CameraApp < GenApp
             else
                 lightstate='Light off';
             end
+%             obj.LightBool=obj.Device.Arduino.StateBool;
             
             sw = uiswitch(g,'ValueChangedFcn',@obj.MTurnLight,'Items',{'Light off','Light on'},...
                 'Value',lightstate);
@@ -85,7 +105,14 @@ classdef CameraApp < GenApp
             l1.Layout.Row=3;
             l1.Layout.Column=[1 2];
             
-            l2=uieditfield(g,'text','Editable','off');
+            if obj.Session.Init
+                path=obj.Session.Folder;
+                SetPhotoFolder(obj.Device,path);
+            else
+                path="";
+            end
+            
+            l2=uieditfield(g,'text','Editable','off','Value',path);
             l2.Layout.Row=4;
             l2.Layout.Column=3;
             
@@ -93,6 +120,8 @@ classdef CameraApp < GenApp
                 'ButtonPushedFcn',@obj.MSelectFolder,'UserData',{l2});
             but2.Layout.Row=4;
             but2.Layout.Column=[1 2];
+            
+            
         end
         
         function DrawScheduler(obj,pan)
@@ -141,6 +170,7 @@ classdef CameraApp < GenApp
             
         end
         
+        
         function MakeStartDate(obj)
             obj.FinStartDateTime=obj.StartDate+hours(obj.HourStartSet)+minutes(obj.MinutesStartSet);
         end
@@ -152,6 +182,10 @@ classdef CameraApp < GenApp
         function MShoot(obj,src,evnt)
             img=GetCurrentImage(obj.Device);
             obj.ImAxes.ImageSource =img;
+            %AddImage(obj,img,desc,state,source,note)
+            desc=struct;
+            desc.Exposure=obj.Device.ExpTime;
+            AddImage(obj.Session,img,desc,'InMem','Manual','desc');
 
         end
         
@@ -159,6 +193,8 @@ classdef CameraApp < GenApp
             selpath = uigetdir;
             if exist(selpath)
                 src.UserData{1}.Value=selpath;
+                SetFolder(obj.Session,selpath);
+                SetPhotoFolder(obj.Device,selpath);
             end
         end
         
