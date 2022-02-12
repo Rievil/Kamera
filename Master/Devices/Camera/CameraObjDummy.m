@@ -18,6 +18,7 @@ classdef CameraObjDummy < Device
         TimerRunning=0;
         UIAxes;
         ExpTime=2500;
+        ImgNum=0;
     end
     
     methods
@@ -26,7 +27,10 @@ classdef CameraObjDummy < Device
             
             obj.Timer=CameraTimer(obj);
             AddLogLine(obj,[],[]);
-            obj.Arduino=ArduinoObj(obj);
+
+            %--------------------------------------------------------------
+            obj.Arduino=ArduinoObjDummy(obj);
+            %--------------------------------------------------------------
         end
         
         function SetPhotoFolder(obj,path)
@@ -77,14 +81,7 @@ classdef CameraObjDummy < Device
         
         function Conn(obj)
             if ~obj.IsRunning
-                tic;
-
-                obj.Driver = videoinput('gige', 1, 'BGR8');
-                obj.VSrc= getselectedsource(obj.Driver);
-
                 obj.IsRunning=true;
-                ChangeSettings(obj);
-
                 AddLogLine(obj,"ConnTime",toc);
                 disp('Device ready');
             else
@@ -128,7 +125,7 @@ classdef CameraObjDummy < Device
 %             end
 
             LightUp(obj.Arduino);
-            obj.Image = getsnapshot(obj.Driver);  
+            obj.Image = GetDummySnapshot(obj);  
             
             GoDark(obj.Arduino);
         end
@@ -152,10 +149,16 @@ classdef CameraObjDummy < Device
         end
         
         function img=GetCurrentImage(obj)
-            img=getsnapshot(obj.Driver);  
+            img=GetDummySnapshot(obj);  
 %             AddPhoto(obj,img);
         end
         
+        function I = GetDummySnapshot(obj)
+            obj.ImgNum=obj.ImgNum+1;
+            I=zeros(300,300);
+            I = insertText(I,[150,150],sprintf("Dummy image %d",obj.ImgNum),'AnchorPoint','center','FontSize',16);
+        end
+
         function Shoot(obj)
             tic;
             try
@@ -164,7 +167,7 @@ classdef CameraObjDummy < Device
                 OpenConnection(obj.Arduino);
                 LightUp(obj.Arduino);
                 
-                obj.Image = getsnapshot(obj.Driver);  
+                obj.Image = GetDummySnapshot(obj);  
                 
                 disp('-----Image succesfully stored----:-)');
                 
@@ -262,7 +265,9 @@ classdef CameraObjDummy < Device
     methods %abstract
 
         function list=GetDeviceList(obj)
-            list=gigecamlist;
+            %-----------------
+
+            list=table("Dummy camera object","IP");
             obj.DeviceList=list;
         end
         

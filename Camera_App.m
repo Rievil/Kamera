@@ -1,5 +1,5 @@
 dm=DeviceMonitor;
-
+%
 dm.Start;
 %%
 dm.StartDevice;

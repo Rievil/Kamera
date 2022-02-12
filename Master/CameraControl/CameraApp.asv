@@ -37,7 +37,7 @@ classdef CameraApp < GenApp
     
     methods %abstract
         function CloseChild(obj)
-%             obj.Session.Save;
+            obj.Session.Save;
         end
         
         
@@ -229,7 +229,7 @@ classdef CameraApp < GenApp
             MakeStartDate(obj.Session);
             x=[];
             y2=[];
-            nowar=datetime(now(),'ConvertFrom','datenum','Format','HH:mm:ss dd.MM.yyyy');
+            nowar=datetime(now(),'ConvertFrom','datenum','Format','HH:mm:ss dd.mm.yyyy');
             for i=1:size(T,1)
                 len=seconds(T.Len(i));
                 per=seconds(T.Per(i));
@@ -262,18 +262,14 @@ classdef CameraApp < GenApp
             plot(ax,[nowar nowar],[0 max(y)],'r-');
             
             x2=[nowar; x];
-            if nowar>max(x)
-                text(ax,nowar-hours(1),max(y)*0.8,sprintf('Current time %s',nowar),'Color','r',...
-                'HorizontalAlignment','right');
-            else
-                text(ax,nowar+hours(1),max(y)*0.8,sprintf('Current time %s',nowar),'Color','r',...
+            if nowar>max(x2)
+            text(ax,nowar+hours(1),max(y)*0.8,sprintf('Current time %s',nowar),'Color','r',...
                 'HorizontalAlignment','left');
-            end
-
+            
             ylabel(ax,'Photo count');
             xlabel(ax,'Time');
             ylim(ax,[min(y),max(y)]);
-            xlim(ax,[min(x2)-hours(2), max(x2)+hours(2)]);
+            xlim(ax,[min(x2)-hours(1), max(x2)+hours(1)]);
             datetick(ax,'x','yyyy-mm-dd','keeplimits')
         end
         

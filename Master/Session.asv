@@ -212,7 +212,6 @@ classdef Session < Module
     methods %Abstract
         function stash=Pack(obj)
             stash=struct;
-            
             stash.ImageList=obj.ImageList;
             stash.PhotoCount=obj.PhotoCount;
             stash.DescList=obj.DescList;
@@ -282,7 +281,7 @@ classdef Session < Module
         function MRowSelect(obj,src,evnt)
             coor=evnt.Indices;
             ID=obj.ImageList.ID(coor(1));
-            obj.RowSel=coor(1);
+            obj.RowSel=ID;
             switch lower(obj.ImageList.State(coor(1)))
                 case 'inmem'
                     img=obj.ImageList.Img{obj.ImageList.ID==ID};
@@ -305,17 +304,10 @@ classdef Session < Module
             
         end
 
-        function MDeleteImage(obj,~,~)
+        function MDeleteImage(obj,src,evnt)
             if size(obj.ImageList,1)>1
-                if obj.RowSel==0
-                    obj.RowSel=size(obj.ImageList,1);
-                end
-                obj.ImageList.State(obj.RowSel)="Deleted";
-                filename=[char(obj.Folder) '\' char(obj.ImageList.Name(obj.RowSel)) '.png'];
-                delete(filename);
+                obj.ImageList.State(obj.RowSel)=""
                 
-                obj.UITable.Data=obj.ImageList;
-                obj.RowSel=0;
             end
         end
            

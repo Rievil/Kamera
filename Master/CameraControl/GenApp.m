@@ -23,22 +23,6 @@ classdef GenApp < handle
                 'CloseRequestFcn',@obj.MFigClose);
             obj.UIFigBool=true;
             
-%             g = uigridlayout(fig);
-%             g.RowHeight = {250,'1x'};
-%             g.ColumnWidth = {'1x'};
-%             
-%             p=uipanel(g,'Title','Device panel');
-%             p.Layout.Row=2;
-%             p.Layout.Column=1;
-%             
-%             obj.UIDevPanel=p;
-%             
-%             tabgp = uitabgroup(f,'Position',[.05 .05 .3 .8]);
-%             for i=1:obj.Parent.ConDeviceCount
-%                 tab1 = uitab(tabgp,'Title','CameraObj');
-%             end
-%             obj.UIDevPanel=tab1;
-            
             AppDrawGui(obj);
         end
     end
