@@ -17,7 +17,7 @@ classdef CameraObj < Device
         
         TimerRunning=0;
         UIAxes;
-        ExpTime=2500;
+        ExpTime=5000;
     end
     
     methods
@@ -59,10 +59,10 @@ classdef CameraObj < Device
             nowArr=CameraObj.GetNow;
             if isempty(obj.StatLog)
                 
-                obj.StatLog=table(1,nowArr,obj.Filename,"StartUp",0,'VariableNames',{'N','DateTime','FileName','Name','Duration'});
+                obj.StatLog=table(1,nowArr,string(obj.Filename),"StartUp",0,'VariableNames',{'N','DateTime','FileName','Name','Duration'});
             else
                 t=table(max(obj.StatLog{:,1})+1,...
-                    nowArr-seconds(duration),name,obj.Filename,duration,'VariableNames',{'N','DateTime','FileName','Name','Duration'});
+                    nowArr-seconds(duration),name,string(obj.Filename),duration,'VariableNames',{'N','DateTime','FileName','Name','Duration'});
                 obj.StatLog=[obj.StatLog; t];
             end
         end
@@ -188,7 +188,7 @@ classdef CameraObj < Device
         end
         
         function ResetDriver(obj)
-            obj.obj.IsRunning=false;
+            obj.IsRunning=false;
             tic;
             disp('Reseting driver...');
             delete(obj.Driver);

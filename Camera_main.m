@@ -1,6 +1,6 @@
 obj=CameraObj(1);
 %
-SetPhotoFolder(obj,'C:\Users\uzivatel\OneDrive - Vysoké učení technické v Brně\Měření\2022\Data')
+SetPhotoFolder(obj,'C:\Users\uzivatel\Vysoké učení technické v Brně\22-02098S - General\Data\Kamera\Measurements\01122022_Hydrox_Uhlic\Images')
 %
 FindCamera(obj);
 
@@ -8,9 +8,9 @@ Conn(obj);
 %%
 % SetPhotoFolder(obj,'C:\Users\uzivatel\OneDrive - Vysoké učení technické v Brně\Alkali_1')
 %%
-length=[hours(12),days(2)];
-period=[minutes(5),minutes(30)];
-%%
+length=[days(1),days(7)];
+period=[minutes(15),hours(1)];
+
 SetSchedule(obj,length,period);
 %%
 T=table(length',period','VariableNames',{'Len','Per'});
