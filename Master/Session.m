@@ -4,24 +4,29 @@ classdef Session < Module
     
     properties
         Folder char;
+        FolderSet=false;
+        ScheduleSet=false;
         ImageList table;
         DescList;      
+        Timer;
         PhotoCount double;
         States;
         Sources;
         UITable;
         Memory table;
-        MaxImInMemory=10;
+        MaxImInMemory=1;
         TNames;
         Init=false;
         StoreOverflow=true;
         SchedTable;
         StartDate datetime;
         FinStartDateTime datetime;
+        EndDate datetime;
         MinutesStartSet=0;
         HourStartSet=0;
         EpochCount=1;
         RowSel;
+        TimerRunning=false;
     end
     
     
@@ -29,6 +34,7 @@ classdef Session < Module
     methods
         function obj = Session(parent)
             obj@Module(parent);
+            obj.Timer = SessionTimer(obj);
             obj.PhotoCount=1;
             obj.States={'InMem','Saved','Deleted','Missing','Planned'};
             obj.Sources={'Manual','Automatic'};
@@ -64,9 +70,59 @@ classdef Session < Module
             obj.FinStartDateTime=obj.StartDate+hours(obj.HourStartSet)+minutes(obj.MinutesStartSet);
         end
         
+        function T=MakeSchedule(obj)
+            MakeStartDate(obj);
+            T0=obj.SchedTable;
+            schcount=size(T0,1);
+            T=table;
+            if schcount>0
+                for i=1:schcount
+                    T=[T; table(CameraTimer.GetTimeVar(char(T0.LengthType(i)),T0.nL(i)),...
+                        CameraTimer.GetTimeVar(char(T0.PeriodType(i)),T0.nP(i)),'VariableNames',{'Len','Per'})];
+                end
+            end
+        end
+        
+        function Tout=CreatePlan(obj)
+            T=MakeSchedule(obj);
+            x=[];
+            y2=[];
+            epoch=1;
+            for i=1:size(T,1)
+                len=seconds(T.Len(i));
+                per=seconds(T.Per(i));
+
+                count=len/per;
+                time=linspace(per,per*count,count);
+                period=linspace(per,per,count);
+
+                y2=[y2; period'];
+
+                if i>1
+                    time=time+x(end);
+                    x=[x; time'];
+                else
+                    x=[x; time'];
+                end
+                
+                epoch=[epoch; linspace(i,i,numel(time))'];
+            end
+
+            x=[0; x];
+            
+            
+            y2=[0; y2];
+            x=seconds(x)+obj.FinStartDateTime;
+            y=1:1:numel(x);
+            y=y';
+            Tout=table(x,y,y2,epoch,'VariableNames',{'Time','Count','Seconds','Etap'});
+        end
+        
         function CheckForOpenSession(obj)
             if ~isempty(obj.Folder)
+                
                 if exist(obj.Folder)
+                    obj.FolderSet=true;
                     files=struct2table(dir([char(obj.Folder) '\*.mat']));
                     names=lower(string(files.name));
                     
@@ -92,7 +148,8 @@ classdef Session < Module
                         disp('Found multiple sessions, please pick which has to be loaded ...');
                         %have to add GUI whitch session to select
                     end
-                    
+                else
+                    obj.FolderSet=false;
                 end
             end
         end
@@ -115,13 +172,11 @@ classdef Session < Module
             stash=obj.Pack;
             filename=[char(obj.Folder) '\Session.mat'];
             save(filename,'stash');
-            fprintf("   Session saved at path '%s'\n",filename);
+            fprintf("... Session saved at path '%s'\n",filename);
         end
         
         function ResetList(obj)
-
             obj.ImageList=table([],[],[],[],[],[],[],{},'VariableNames',obj.TNames);
-
         end
         
         function StoreImage(obj,id)
@@ -130,23 +185,106 @@ classdef Session < Module
             end
         end
         
-        function AddImage(obj,img,desc,state,source,note)
+        function DrawSchedule(obj,exp)
+            Tout=CreatePlan(obj);
+            if size(obj.ImageList,1)>0
+                obj.ImageList(obj.ImageList.State=="Planned",:)=[];
+            end
+            
+            if size(Tout,1)>0
+                obj.ScheduleSet=true;
+                for i=1:size(Tout,1)
+                    AddBlankImage(obj,{},Tout.Time(i),exp,"Planned","Automatic","-");
+                end
+            end
+            
+            
+        end
+        
+        function StopScheduleShooting(obj)
+            if obj.TimerRunning
+                obj.TimerRunning=false;
+                obj.Timer.ClearTimer;
+            end
+        end
+        
+        function state=CheckSchedule(obj)
+            state=false;
+            T=obj.ImageList(obj.ImageList.State=="Planned" & obj.ImageList.DateTime>date,:);
+            if size(T,1)>0
+                state=true;
+                obj.ScheduleSet=true;
+            end
+        end
+        
+        function StartScheduleShooting(obj)
+            if CheckSchedule(obj)
+                date=datetime(now,'ConvertFrom','datenum','Format','dd-MM-yyyy HH-mm-ss');
+                T=obj.ImageList(obj.ImageList.State=="Planned" & obj.ImageList.DateTime>date,:);
+                if size(T,1)>0
+                    obj.TimerRunning=true;
+                    SetSpecificTimes(obj.Timer,obj.ImageList(obj.ImageList.State=="Planned",[1,2,3,4,5,6,7]));
+                    StartTimer(obj.Timer);
+                else
+                    obj.TimerRunning=false;
+                end
+            end
+        end
+        
+        function AddImage(obj,img,date,exp,state,source,note)
             obj.PhotoCount=obj.PhotoCount+1;
             
             name=sprintf("%d_image",obj.PhotoCount);
-            date=datetime(now,'ConvertFrom','datenum','Format','dd-MM-yyyy hh-mm-ss');
-            
-%             obj.Memory=[table(obj.PhotoCount,{img},'VariableNames',{'ID','Img'});...
-%                 obj.Memory];
-            
-            T=table(obj.PhotoCount,name,date,desc.Exposure,string(state),...
-                string(source),string(note),{img},'VariableNames',obj.TNames);
+            obj.TNames={'ID','Name','DateTime','Exposure','State','Source','Note','Img'};
+            T=table(obj.PhotoCount,name,date,exp,state,source,note,{img},...
+                'VariableNames',obj.TNames);
             
             obj.ImageList=[obj.ImageList; T];
             obj.StoreOverflow=true;
             
-            CheckMemory(obj)
+            CheckMemory(obj);
+        end
+        
+        function ShootPlannedImage(obj,id)
+            idx=find(obj.ImageList.ID==id);
             
+            cam=obj.Parent.Device;
+            if cam.ExpTime~=obj.ImageList.Exposure(idx)
+                cam.ExpTime=obj.ImageList.Exposure(idx);
+                ChangeSettings(cam);
+            end
+            
+            cam.LightUp;
+            pause(0.5);
+            
+            img=GetCurrentImage(cam);
+            
+            cam.GoDark;
+            
+            obj.ImageList.Name(idx)=sprintf("%d_image",id);
+            obj.ImageList.Img{idx}=img;
+            obj.ImageList.State(idx)='InMem';
+            obj.StoreOverflow=true;
+            
+            if obj.FolderSet
+                StorePhoto(obj,id);
+            end
+            
+            CheckMemory(obj);
+            UpdateUITable(obj);
+        end
+        
+        function AddBlankImage(obj,img,date,exp,state,source,note)
+            name="-";
+            obj.PhotoCount=obj.PhotoCount+1;
+%             obj.TNames={'ID','Name','DateTime','Exposure','State','Source','Note','Img'};
+            T=table(obj.PhotoCount,name,date,exp,state,source,note,{img},...
+                'VariableNames',obj.TNames);
+            
+            obj.ImageList=[obj.ImageList; T];
+            obj.StoreOverflow=true;
+            
+            CheckMemory(obj);
         end
         
         function str=Filename(obj,id)
@@ -157,10 +295,16 @@ classdef Session < Module
             disp('test');
             for i=1:size(obj.ImageList,1)
                 filename=[char(obj.Folder) '\' char(obj.ImageList.Name(i)) '.png'];
-                if exist(filename)
-                    obj.ImageList.State(i)="Saved";
-                else
-                    obj.ImageList.State(i)="Missing";
+                switch obj.ImageList.State(i)
+                    case 'InMem'
+                    case 'Saved'
+                        if exist(filename)
+                            obj.ImageList.State(i)="Saved";
+                        else
+                            obj.ImageList.State(i)="Missing";
+                        end
+                    case 'Planned'
+                    otherwise
                 end
             end
             obj.UITable.Data=obj.ImageList;
@@ -169,20 +313,38 @@ classdef Session < Module
         function CheckMemory(obj)
             if size(obj.ImageList,1)>0
                 %Mem loop
-                T=obj.ImageList(obj.ImageList.State=='InMem',:);
+                T=obj.ImageList(obj.ImageList.State=="InMem",:);
 
                 if size(T,1)>obj.MaxImInMemory
-                    count=size(obj.ImageList(obj.ImageList.State=='InMem',:),1)-obj.MaxImInMemory;
+                    count=size(obj.ImageList(obj.ImageList.State=="InMem",:),1)-obj.MaxImInMemory;
                     for i=1:count
-                        DeleteImage(obj,min(obj.ImageList.ID(obj.ImageList.State=='InMem',:)));
+                        try
+                            DeleteImage(obj,min(obj.ImageList.ID(obj.ImageList.State=="InMem",:)));
+                        catch
+                            disp("You dont have permision to delete '%s'\n");
+                        end
                     end
                 end
             end
-            UpdateUITable(obj);
         end
         
         function UpdateUITable(obj)
-            obj.UITable.Data=obj.ImageList;
+            T=sortrows(obj.ImageList,'DateTime');
+            if obj.Parent.UIFigBool
+                obj.UITable.Data=T;
+
+    %             obj.UITable.ColumnWidth ={10,0,35,25,25,25,25,0};
+                removeStyle(obj.UITable);
+                col=lines(4);
+                s = uistyle('BackgroundColor',col(2,:));
+
+                rownum=1:1:size(T,1);
+                idx=rownum(T.State=="Planned")';
+                colidx=linspace(1,1,numel(idx))';
+                if sum(idx)>0
+                    addStyle(obj.UITable,s,'cell',[idx,colidx]);
+                end
+            end
         end
         
         function DeleteImage(obj,id)
@@ -205,6 +367,7 @@ classdef Session < Module
                 imwrite(img,Filename(obj,id),'png');
                 obj.ImageList.State(row)='Saved';
                 obj.ImageList.Img{row}=[];
+%                 Save(obj);
             end
         end
     end
@@ -226,6 +389,9 @@ classdef Session < Module
             stash.HourStartSet=obj.HourStartSet;
             stash.FinStartDateTime=obj.FinStartDateTime;
             stash.EpochCount=obj.EpochCount;
+            stash.Timer=Pack(obj.Timer);
+            stash.TimerRunning=obj.TimerRunning;
+            stash.ScheduleSet=obj.ScheduleSet;
         end
 
         function FillAppFields(obj)
@@ -242,8 +408,28 @@ classdef Session < Module
             fnames = fieldnames(stash);
             
             for i=1:numel(fnames)
-                    obj.(fnames{i})=stash.(fnames{i});
+                    switch fnames{i}
+                        case 'Timer'
+                            obj.Timer.Populate(stash.(fnames{i}));
+                        otherwise
+                            obj.(fnames{i})=stash.(fnames{i});
+                    end
             end
+            UpdateUITable(obj);
+            
+            if obj.TimerRunning
+                msg = 'Unfinished running timer found, do you want to continue?';
+                fig=obj.Parent.UIFig;
+                selection = uiconfirm(fig,msg,'Continue in shooting?');
+                switch selection
+                    case 'OK'
+                        StartScheduleShooting(obj);
+                    case 'Cancel'
+                        return
+                end
+                
+            end
+            
         end
         
         function DrawGui(obj)
@@ -281,11 +467,14 @@ classdef Session < Module
         
         function MRowSelect(obj,src,evnt)
             coor=evnt.Indices;
-            ID=obj.ImageList.ID(coor(1));
+            ID=src.Data.ID(coor(1));
+            ILRow=obj.ImageList.ID==ID;
+%             ID=obj.ImageList.ID(coor(1));
+            
             obj.RowSel=coor(1);
-            switch lower(obj.ImageList.State(coor(1)))
+            switch lower(obj.ImageList.State(ILRow))
                 case 'inmem'
-                    img=obj.ImageList.Img{obj.ImageList.ID==ID};
+                    img=obj.ImageList.Img{ILRow};
                     UpdateImage(obj.Parent,img);
                 case 'saved'
                     file=Filename(obj,ID);
@@ -293,12 +482,14 @@ classdef Session < Module
                         img=imread(file);
                         UpdateImage(obj.Parent,img);
                     else
-                        obj.ImageList.State(obj.ImageList.ID==ID)='Missing';
-                        obj.UITable.Data.State(obj.ImageList.ID==ID)='Missing';
+                        obj.ImageList.State(ILRow)='Missing';
+                        obj.UITable.Data.State(coor(1))='Missing';
                     end
                 case 'deleted'
                     
                 case 'missing'
+                    DrawMissingImage(obj.Parent);
+                case 'planned'
                     DrawMissingImage(obj.Parent);
             end
             

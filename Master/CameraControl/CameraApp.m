@@ -137,23 +137,32 @@ classdef CameraApp < GenApp
         end
         
         function DrawScheduler(obj,pan)
+            
             g = uigridlayout(pan);
-            g.RowHeight = {50,50,'1x',25,25};
+            g.RowHeight = {50,50,50,'1x',25,30};
             g.ColumnWidth = {25,'1x',50,50};
             
+            uib1=uibutton(g,'Text','Run scheduler','ButtonPushedFcn',@obj.MRunScheduler);
+            uib1.Layout.Row=1;
+            uib1.Layout.Column=[1 2];
+            
+            uib1=uibutton(g,'Text','Stop Scheduler','ButtonPushedFcn',@obj.MStopScheduler);
+            uib1.Layout.Row=1;
+            uib1.Layout.Column=[3 4];
+            
             lb1=uilabel(g,'Text','Start date:');
-            lb1.Layout.Row=1;
+            lb1.Layout.Row=2;
             lb1.Layout.Column=[1 2];
                         
             d = uidatepicker(g,'DisplayFormat','dd-MM-yyyy','Value',obj.Session.StartDate,...
                 'ValueChangedFcn',@obj.MStartDateSet);
 
-            d.Layout.Row=1;
+            d.Layout.Row=2;
             d.Layout.Column=[3 4];
             obj.UIDatePicker=d;
 
             lb1=uilabel(g,'Text','Start time:');
-            lb1.Layout.Row=2;
+            lb1.Layout.Row=3;
             lb1.Layout.Column=[1 2];
             
             efH= uieditfield(g,'numeric',...
@@ -161,7 +170,7 @@ classdef CameraApp < GenApp
                       'Value', obj.Session.HourStartSet,...
                       'ValueChangedFcn',@obj.MHoursSet);
                   
-            efH.Layout.Row=2;
+            efH.Layout.Row=4;
             efH.Layout.Column=3;
             obj.UIHours=efH;
 
@@ -169,7 +178,7 @@ classdef CameraApp < GenApp
                       'Limits', [0 59],...
                       'Value', obj.Session.MinutesStartSet,...
                       'ValueChangedFcn',@obj.MMinutesSet);
-            efM.Layout.Row=2;
+            efM.Layout.Row=3;
             efM.Layout.Column=4;
             obj.UIMinutes=efM;
 
@@ -180,20 +189,24 @@ classdef CameraApp < GenApp
             uit=uitable(g,'Data',obj.Session.SchedTable,'ColumnWidth',{80,'1x',80,'1x'},...
             'ColumnEditable',[true true true true],...
                 'CellEditCallback',@obj.MSetSchTable);
-            uit.Layout.Row=3;
+            uit.Layout.Row=4;
             uit.Layout.Column=[1 4];
 
             obj.UISTable=uit;
             
             lb1=uilabel(g,'Text','Parts');
-            lb1.Layout.Row=4;
+            lb1.Layout.Row=5;
             lb1.Layout.Column=[1 2];
             
             spin = uispinner(g,'Limits', [1 10],'ValueChangedFcn',@obj.MSchedulerRowChange);
-            spin.Layout.Row=4;
+            spin.Layout.Row=5;
             spin.Layout.Column=[3 4];
             obj.UISpinner=spin;
-
+            
+            uib1=uibutton(g,'Text','Generate schedule','ButtonPushedFcn',@obj.MGenerateSchedule);
+            uib1.Layout.Row=6;
+            uib1.Layout.Column=[1 4];
+            
             PlotScheduler(obj);
             
         end
@@ -201,23 +214,16 @@ classdef CameraApp < GenApp
         
         
         function DrawMissingImage(obj)
-            I=zeros(300,300);
-            I = insertText(I,[150,150],'Missing image','AnchorPoint','center','FontSize',16);
+            I=zeros(300,300,3);
+%             I = insertText(I,[150,150],'Missing image','AnchorPoint','center','FontSize',16);
             obj.ImAxes.ImageSource =I;
         end
 
-        function T=MakeSchedule(obj)
-            T0=obj.Session.SchedTable;
-            schcount=size(T0,1);
-            T=table;
-            if schcount>0
-                for i=1:schcount
-                    T=[T; table(GetTimeVar(obj,char(T0.LengthType(i)),T0.nL(i)),...
-                        GetTimeVar(obj,char(T0.PeriodType(i)),T0.nP(i)),'VariableNames',{'Len','Per'})];
-                end
-            end
-            
-            
+
+        
+        function RunScheduler(obj)
+%             DrawSchedule(obj.Session,obj.Device.ExpTime);
+%             UpdateUITable(obj.Session);
         end
         
         function PlotScheduler(obj)
@@ -225,40 +231,15 @@ classdef CameraApp < GenApp
             hold(ax,'on');
             grid(ax,'on');
             cla(ax);
-            T=MakeSchedule(obj);
-            MakeStartDate(obj.Session);
-            x=[];
-            y2=[];
+            
             nowar=datetime(now(),'ConvertFrom','datenum','Format','HH:mm:ss dd.MM.yyyy');
-            for i=1:size(T,1)
-                len=seconds(T.Len(i));
-                per=seconds(T.Per(i));
 
-                count=len/per;
-                time=linspace(per,per*count,count);
-                period=linspace(per,per,count);
-
-                y2=[y2; period'];
-
-                if i>1
-                    time=time+x(end);
-                    x=[x; time'];
-                else
-                    x=[x; time'];
-                end
-            end
-
-            x=[0; x];
+            Tout=CreatePlan(obj.Session);
             
-            
-            y2=[0; y2];
-            x=seconds(x)+obj.Session.FinStartDateTime;
-            y=1:1:numel(x);
-            y=y';
-            
+            x=Tout.Time;
+            y=Tout.Count;
 
-
-            scatter(ax,x,y,'o');
+            scatter(ax,x,y,'.');
             plot(ax,[nowar nowar],[0 max(y)],'r-');
             
             x2=[nowar; x];
@@ -276,26 +257,24 @@ classdef CameraApp < GenApp
             xlim(ax,[min(x2)-hours(2), max(x2)+hours(2)]);
             datetick(ax,'x','yyyy-mm-dd','keeplimits')
         end
-        
-        
-        function val=GetTimeVar(obj,type,count)
-            
-            switch lower(char(type))
-                case 'minute'
-                    val=minutes(count);
-                case 'hour'
-                    val=hours(count);
-                case 'day'
-                    val=hours(count*24);
-                case 'week'
-                    val=hours(count*24*7);
-            end
-        end
-        
     end
     
     
     methods %callbacks
+
+        
+        function MStopScheduler(obj,src,evnt)
+            StopScheduleShooting(obj.Session);
+        end
+        
+        function MRunScheduler(obj,src,evnt)
+            StartScheduleShooting(obj.Session);
+        end
+        
+        function MGenerateSchedule(obj,src,evnt)
+            DrawSchedule(obj.Session,obj.Device.ExpTime);
+            UpdateUITable(obj.Session);
+        end
         
         function MSetSchTable(obj,src,evnt)
             obj.Session.SchedTable=src.Data;
@@ -318,19 +297,19 @@ classdef CameraApp < GenApp
         function MShoot(obj,src,evnt)
             img=GetCurrentImage(obj.Device);
             obj.ImAxes.ImageSource =img;
-            %AddImage(obj,img,desc,state,source,note)
-            desc=struct;
-            desc.Exposure=obj.Device.ExpTime;
-            AddImage(obj.Session,img,desc,'InMem','Manual','desc');
-
+            date=datetime(now,'ConvertFrom','datenum','Format','dd-MM-yyyy HH-mm-ss');
+            AddImage(obj.Session,img,date,obj.Device.ExpTime,"InMem","Manual","desc");
+            UpdateUITable(obj.Session);
         end
         
         function MSelectFolder(obj,src,~)
             selpath = uigetdir;
-            if exist(selpath)
-                src.UserData{1}.Value=selpath;
-                SetFolder(obj.Session,selpath);
-                SetPhotoFolder(obj.Device,selpath);
+            if numel(selpath)>1
+                if exist(selpath)
+                    src.UserData{1}.Value=selpath;
+                    SetFolder(obj.Session,selpath);
+                    SetPhotoFolder(obj.Device,selpath);
+                end
             end
         end
         

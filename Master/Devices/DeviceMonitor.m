@@ -103,7 +103,8 @@ classdef DeviceMonitor < handle
             switch name
                 case 'CameraObj'
                     %--------------------------------------------------------------
-                    obj2=CameraObjDummy(obj);
+                    obj2=CameraObj(obj);
+%                     obj2=CameraObjDummy(obj);
                     %--------------------------------------------------------------
                     
                     app=CameraApp(obj);
@@ -164,40 +165,7 @@ classdef DeviceMonitor < handle
         
         
         function DrawGui(obj)
-%             obj.DevFig=uifigure;
-%             DrawGui(obj.App);
-%             obj.DevFig=uifigure('position',GetScreenDim(obj,900,600));
-% 
 %             
-% 
-%             g=uigridlayout(obj.DevFig);
-%             g.RowHeight = {25,75,'1x',25};
-%             g.ColumnWidth = {300,'3x',250};
-%             
-%             uit=uitable(g);
-%             uit.Layout.Row=[2 3];
-%             uit.Layout.Column=1;
-%             
-%             
-%             bu1=uibutton(g,'Text','Select folder',...
-%                 'ButtonPushedFcn',@obj.MSetFolder);
-%             bu1.Layout.Row=1;
-%             bu1.Layout.Column=1;
-%             
-%             p1=uipanel(g,'Title','Device control panel');
-%             p1.Layout.Row=[2 4];
-%             p1.Layout.Column=2;            
-%             SetFig(obj.Device,p1);
-%             
-%             
-%             p2=uipanel(g,'Title','Marker Control');
-%             p2.Layout.Row=2;
-%             p2.Layout.Column=3;
-%             
-%             p3=uipanel(g,'Title','Export settings');
-%             p3.Layout.Row=[3 4];
-%             p3.Layout.Column=3;
-            
         end
     end
     

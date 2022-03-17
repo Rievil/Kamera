@@ -152,8 +152,16 @@ classdef CameraObj < Device
         end
         
         function img=GetCurrentImage(obj)
-            img=getsnapshot(obj.Driver);  
-%             AddPhoto(obj,img);
+            try
+                img=getsnapshot(obj.Driver);  
+                AddLogLine(obj,"ShootTime",toc);
+            catch ME
+                warning('Image wasnt stored');
+                disp(ME.message);
+                AddLogLine(obj,"ShootTimeError",toc);
+                CloseConnection(obj.Arduino);
+                ResetDriver(obj);    
+            end
         end
         
         function Shoot(obj)
@@ -309,5 +317,6 @@ classdef CameraObj < Device
         function nowArr=GetNow(~)
             nowArr=datetime(now,'ConvertFrom','datenum','Format','dd-MM-yyyy hh-mm-ss');
         end
+        
     end
 end
